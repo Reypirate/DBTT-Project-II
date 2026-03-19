@@ -1,0 +1,38 @@
+export const MOCK_ORDERS = [
+  {
+    id: "ORD-2026-892",
+    customer: "John Tan",
+    status: "pending",
+    items: ["Qingming Essential Kit x1"],
+    total: 38.0,
+    pickupDate: "2026-04-01",
+    time: "Morning",
+  },
+  {
+    id: "ORD-2026-893",
+    customer: "Mary Lim",
+    status: "preparing",
+    items: ["Everyday Deity Offering Set x2", "Sandalwood Incense x1"],
+    total: 45.5,
+    pickupDate: "2026-04-02",
+    time: "Afternoon",
+  },
+  {
+    id: "ORD-2026-894",
+    customer: "David Wong",
+    status: "ready",
+    items: ["7th Month Hungry Ghost Bundle x1"],
+    total: 45.0,
+    pickupDate: "2026-04-01",
+    time: "Late Afternoon",
+  },
+  {
+    id: "ORD-2026-880",
+    customer: "Sarah Lee",
+    status: "completed",
+    items: ["Qingming Essential Kit x2"],
+    total: 76.0,
+    pickupDate: "2026-03-28",
+    time: "Morning",
+  },
+];

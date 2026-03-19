@@ -1,0 +1,37 @@
+import "../globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "next-themes";
+import { Navigation } from "@/components/Navigation";
+import { AIAdvisor } from "@/components/AIAdvisor";
+import React from "react";
+
+export const metadata = {
+  title: "MyLegacy",
+  description: "Traditional Ceremonial Offerings O2O Planner",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col overflow-x-hidden transition-colors duration-200">
+              <Navigation />
+              <main className="flex-grow">{children}</main>
+              <AIAdvisor />
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
