@@ -8,6 +8,9 @@ import React from "react";
 export const metadata = {
   title: "MyLegacy",
   description: "Traditional Ceremonial Offerings O2O Planner",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col overflow-x-hidden transition-colors duration-200">
+            <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col transition-colors duration-200">
               <Navigation />
               <main className="flex-grow">{children}</main>
               <AIAdvisor />

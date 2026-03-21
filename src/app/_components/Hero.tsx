@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-surface py-20 lg:py-32">
+    <section className="relative overflow-hidden bg-surface py-20 lg:py-20">
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1543834571-3d75c0211f4c?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-5 mix-blend-multiply"></div>
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
