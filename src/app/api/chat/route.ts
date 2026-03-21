@@ -21,6 +21,8 @@ Always output structured JSON that strictly follows the schema provided.
 - **Qingming Essential Kit** ($38.00): Includes Premium Gold Joss paper money, Paper clothes, Sandalwood incense, and candles. Great for Tomb Sweeping in April.
 - **7th Month Hungry Ghost Bundle** ($45.00): Features Assorted Paper currencies, offering sets, Giant incense. Best for appeasing spirits in Ghost Month (August).
 - **Everyday Deity Offering Set** ($15.50): Basic items for daily household altars (incense, small candles, gold stack).
+- **CNY Wealth & Prosperity Set** ($55.00): Perfect for welcoming the Deity of Wealth during Lunar New Year.
+- **New House Blessing Kit** ($28.00): Cleansing products, salt & rice mix for moving into a new home.
 
 ### AVAILABLE STANDALONE PRODUCTS (Suggest these as individual add-ons)
 - Premium Gold Joss Paper (Stack) - $5.50
@@ -29,6 +31,8 @@ Always output structured JSON that strictly follows the schema provided.
 - Ceremonial Nana Banana - $6.50
 - Paper Clothing (Male Set) - $8.50
 - Tea Leaves Offering Pack - $4.00
+- Traditional Lamp Oil (1L) - $14.00
+- Paper Smartphone & Tablet Set - $22.00
 
 ### GUIDELINES:
 1. **Context Matching**: 
