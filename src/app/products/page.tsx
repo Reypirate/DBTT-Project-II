@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import { Filter, ShoppingBag } from "lucide-react";
-import { PRODUCTS } from "@/data/rituals";
+import { PRODUCTS } from "@/data/products";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const CATEGORIES = ["All", "Paper Offerings", "Incense", "Candles", "Food Offerings"];
 
 export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const router = useRouter();
 
   const filteredProducts =
     activeCategory === "All" ? PRODUCTS : PRODUCTS.filter((p) => p.category === activeCategory);
@@ -54,7 +56,8 @@ export default function ProductsPage() {
           {filteredProducts.map((product) => (
             <Card
               key={product.id}
-              className="overflow-hidden border border-neutral-main shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group"
+              className="overflow-hidden border border-neutral-main shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer"
+              onClick={() => router.push(`/products/${product.id}`)}
             >
               <div className="aspect-square relative overflow-hidden bg-surface">
                 <img
