@@ -6,7 +6,7 @@
 
 Traditional Chinese rituals (Qingming, Hungry Ghost, Ancestor remembrance) require deep cultural knowledge regarding offering items. Most buyers do not know whether to buy prebuilt bundles or which items to complement rituals. This application removes that friction by leveraging **Google Gemini** and **TanStack AI** to guide clients via structured AI-based suggestions on what is culturally accurate and respectful to prepare.
 
-Users simply type a prompt (e.g., "Help preparing for Qingming Festival"), and receive a structured deck of recommendations, recommended bundles, and helpful procedural tips.
+Users simply type a prompt (e.g., "Help preparing for Qingming Festival"), and receive a structured deck of recommendations, recommended bundles, and helpful procedural tips—all with **clickable links** directly linking back to product and bundle detail views for easy pre-ordering setup.
 
 ## 🏗️ Architecture
 
@@ -27,14 +27,18 @@ flowchart TD
             ChatAPI["/api/chat<br/>(AI Advisor)"]
         end
 
-    Pages --> Server
+    Pages -- "Request prompt" --> Server
+    Server -- "Recommendation JSON" --> Pages
     end
 
     TanstackAI{{"TanStack AI SDK<br/>(Structured output with Zod schema)"}}
     Gemini{{"Google Gemini API<br/>(Structured output with schema)"}}
 
-    ChatAPI -- "TanStack AI" ---> TanstackAI
-    TanstackAI -- "Structured text" ---> Gemini
+    ChatAPI -- "Prompt + Schema" --> TanstackAI
+    TanstackAI -- "Structured Response" --> ChatAPI
+
+    TanstackAI -- "Prompt constraint" --> Gemini
+    Gemini -- "Inference Output" --> TanstackAI
 ```
 
 | Layer             | Component                   | Purpose                                                                                                                            |
