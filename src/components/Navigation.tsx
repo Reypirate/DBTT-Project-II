@@ -22,6 +22,9 @@ export const Navigation = () => {
             <Link href="/calendar" className="hover:text-primary transition-colors font-medium">
               Calendar
             </Link>
+            <Link href="/remembrance" className="hover:text-primary transition-colors font-medium">
+              Remembrances
+            </Link>
             <Link href="/bundles" className="hover:text-primary transition-colors font-medium">
               Bundles
             </Link>

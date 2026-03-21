@@ -103,9 +103,6 @@ export function AIAdvisor() {
               <Sparkles className="size-5" />
               The Heritage Advisor
             </DrawerTitle>
-            <p className="text-sm text-text-main/60">
-              Simulated AI Guidance for Traditional Rituals & Offerings
-            </p>
           </DrawerHeader>
 
           <div className="p-6 overflow-y-auto h-[400px] flex flex-col gap-4">
