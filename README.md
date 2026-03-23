@@ -93,6 +93,61 @@ GEMINI_API_KEY=your_google_gemini_api_key
 | Variable         | Description                                                         |
 | ---------------- | ------------------------------------------------------------------- |
 | `GEMINI_API_KEY` | REQUIRED: API key for Google Gemini servicing the AI representation |
+| `DATABASE_URL`   | REQUIRED: PostgreSQL connection string for local development        |
+
+## 🗄️ Database Management (Drizzle)
+
+We use **Drizzle ORM** for local database management. Ensure you have a local PostgreSQL instance running.
+
+### 1. Initial Setup
+
+Push the schema to your local database:
+
+```bash
+pnpm run db:push
+```
+
+### 2. Seeding Data
+
+Populate your database with the latest product catalog from `src/data/products.ts`:
+
+```bash
+pnpm run db:seed
+```
+
+### 3. Visualizing Data
+
+Open the Drizzle Studio UI to explore and edit your local data:
+
+```bash
+pnpm run db:studio
+```
+
+## 🤝 Workflow for Contributors
+
+To keep the project stable, please follow this standard Git workflow:
+
+### 1. Syncing with Main
+
+Always pull the latest changes before starting your work:
+
+```bash
+git pull origin main
+```
+
+### 2. Making Changes
+
+1. Create a descriptive branch (optional but recommended): `git checkout -b feature/your-feature-name`
+2. Implement your changes.
+3. Test locally using `pnpm run dev`.
+
+### 3. Committing & Pushing
+
+```bash
+git add .
+git commit -m "feat: description of your change"
+git push origin your-branch-name
+```
 
 ## 🧑‍💻 Usage
 
@@ -120,6 +175,10 @@ pnpm run start
 dbtt-project/
 ├── .github/workflows/        # CI/CD pipelines deployment buffers
 ├── src/
+│   ├── db/
+│   │   ├── index.ts              # Drizzle client & connection setup
+│   │   ├── schema.ts             # Database table definitions
+│   │   └── seed.ts               # Automated seeding from local data
 │   ├── app/
 │   │   ├── admin/                # Dashboard graphs metrics overlays
 │   │   ├── api/chat/             # AI Advisor Tanstack endpoint router
