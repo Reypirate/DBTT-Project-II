@@ -38,15 +38,6 @@ export const PRODUCTS: Product[] = [
     description: "Thick red incense candles with gold Chinese characters inscribed.",
   },
   {
-    id: "PROD-004",
-    name: "Ceremonial Nana Banana",
-    category: "Food Offerings",
-    price: 6.5,
-    image: "/images/nana_banana.png",
-    description:
-      "Fresh, vibrant yellow bananas placed on an elegant traditional red plate for offerings.",
-  },
-  {
     id: "PROD-005",
     name: "Paper Clothing (Male Set)",
     category: "Paper Offerings",
@@ -70,15 +61,6 @@ export const PRODUCTS: Product[] = [
     image: "/images/lamp_oil.png",
     description:
       "Premium aromatic oil for longevity lamps and continuous burning at household altars.",
-  },
-  {
-    id: "PROD-008",
-    name: "Paper Smartphone & Tablet Set",
-    category: "Paper Offerings",
-    price: 22.0,
-    image: "/images/paper_smartphone.png",
-    description:
-      "Modern afterlife offerings including a life-size paper smartphone and accessories.",
   },
 ];
 

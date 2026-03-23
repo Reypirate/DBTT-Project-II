@@ -10,7 +10,11 @@
     "format": "pnpm oxfmt",
     "lint": "pnpm oxlint --config oxlint.config.ts",
     "preview": "next start",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
@@ -23,6 +27,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
@@ -45,10 +50,12 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.27",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^10.0.3",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
@@ -59,6 +66,7 @@
     "oxlint": "^1.56.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.57.1",
     "vite": "^8.0.1"
