@@ -9,7 +9,7 @@ export const Navigation = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
 
   return (
-    <header className="bg-surface border-b border-neutral-main p-4 flex justify-between items-center shadow-sm">
+    <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-neutral-main p-4 flex justify-between items-center shadow-sm">
       <Link href="/" className="font-playfair text-2xl font-bold text-primary">
         MyLegacy
       </Link>
@@ -22,11 +22,14 @@ export const Navigation = () => {
             <Link href="/calendar" className="hover:text-primary transition-colors font-medium">
               Calendar
             </Link>
+            <Link href="/remembrance" className="hover:text-primary transition-colors font-medium">
+              Remembrances
+            </Link>
             <Link href="/bundles" className="hover:text-primary transition-colors font-medium">
               Bundles
             </Link>
             <Link href="/products" className="hover:text-primary transition-colors font-medium">
-              Catalogue
+              Products
             </Link>
           </>
         )}

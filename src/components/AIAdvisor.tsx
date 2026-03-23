@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { BUNDLES } from "@/data/bundles";
+import { PRODUCTS } from "@/data/products";
 
 const INITIAL_SUGGESTIONS = [
   "Grandparents' death anniversary offerings",
@@ -100,9 +103,6 @@ export function AIAdvisor() {
               <Sparkles className="size-5" />
               The Heritage Advisor
             </DrawerTitle>
-            <p className="text-sm text-text-main/60">
-              Simulated AI Guidance for Traditional Rituals & Offerings
-            </p>
           </DrawerHeader>
 
           <div className="p-6 overflow-y-auto h-[400px] flex flex-col gap-4">
@@ -136,14 +136,30 @@ export function AIAdvisor() {
                               Suggested Bundles
                             </span>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {msg.data.recommendedBundles.map((b, i) => (
-                                <span
-                                  key={i}
-                                  className="text-xs px-2 py-0.5 bg-secondary/10 text-secondary font-medium rounded-full border border-secondary/20"
-                                >
-                                  {b}
-                                </span>
-                              ))}
+                              {msg.data.recommendedBundles.map((b, i) => {
+                                const bundle = BUNDLES.find(
+                                  (item) => item.name.toLowerCase() === b.toLowerCase(),
+                                );
+                                if (bundle) {
+                                  return (
+                                    <Link
+                                      key={i}
+                                      href={`/bundles/${bundle.id}`}
+                                      className="text-xs px-2 py-0.5 bg-secondary/10 text-secondary hover:bg-secondary/20 font-medium rounded-full border border-secondary/20 transition-colors cursor-pointer"
+                                    >
+                                      {b}
+                                    </Link>
+                                  );
+                                }
+                                return (
+                                  <span
+                                    key={i}
+                                    className="text-xs px-2 py-0.5 bg-secondary/10 text-secondary font-medium rounded-full border border-secondary/20"
+                                  >
+                                    {b}
+                                  </span>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -154,14 +170,30 @@ export function AIAdvisor() {
                                 Suggested Products
                               </span>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {msg.data.recommendedProducts.map((p, i) => (
-                                  <span
-                                    key={i}
-                                    className="text-xs px-2 py-0.5 bg-primary/10 text-primary font-medium rounded-full border border-primary/20"
-                                  >
-                                    {p}
-                                  </span>
-                                ))}
+                                {msg.data.recommendedProducts.map((p, i) => {
+                                  const product = PRODUCTS.find(
+                                    (item) => item.name.toLowerCase() === p.toLowerCase(),
+                                  );
+                                  if (product) {
+                                    return (
+                                      <Link
+                                        key={i}
+                                        href={`/products/${product.id}`}
+                                        className="text-xs px-2 py-0.5 bg-primary/10 text-primary hover:bg-primary/20 font-medium rounded-full border border-primary/20 transition-colors cursor-pointer"
+                                      >
+                                        {p}
+                                      </Link>
+                                    );
+                                  }
+                                  return (
+                                    <span
+                                      key={i}
+                                      className="text-xs px-2 py-0.5 bg-primary/10 text-primary font-medium rounded-full border border-primary/20"
+                                    >
+                                      {p}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

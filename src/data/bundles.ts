@@ -38,4 +38,32 @@ export const BUNDLES = [
     description: "Basic daily offering items for the household altar.",
     items: ["Daily Incense (1 box)", "Small Red Candles", "Joss Paper Gold (1 stack)"],
   },
+  {
+    id: "b4",
+    name: "CNY Wealth & Prosperity Set",
+    price: 55.0,
+    category: "Festivals",
+    image: "/images/cny_bundle.png",
+    description: "Ideal for welcoming the Deity of Wealth during the Lunar New Year.",
+    items: [
+      "Foil-layered Gold Joss Paper",
+      "Wealth Summoning Scrolls",
+      "Pineapple Glass Candles (1 pair)",
+      "Premium Sweet Aromatic Incense",
+    ],
+  },
+  {
+    id: "b5",
+    name: "New House Blessing Kit",
+    price: 28.0,
+    category: "Deities",
+    image: "/images/new_house_bundle.png",
+    description: "Everything you need to cleanse and bless a new home or workspace.",
+    items: [
+      "Huat Prosperity Salt & Rice mix",
+      "Red Door-frame blessing banners",
+      "Five-Element Deity Offering sets",
+      "Safe-passage rituals paper setup",
+    ],
+  },
 ];

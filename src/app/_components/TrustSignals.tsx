@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function TrustSignals() {
   return (
-    <section className="border-y border-neutral-main bg-white py-12">
+    <section className="border-y border-neutral-main bg-surface py-12">
       <div className="container mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4">
         <div className="flex items-center gap-4 text-text-main/80">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">

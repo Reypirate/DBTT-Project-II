@@ -1,65 +1,18 @@
-export const PRODUCTS = [
-  {
-    name: "Premium Gold Joss Paper (Stack)",
-    category: "Paper Offerings",
-    price: 5.5,
-    image_url: "/images/joss_paper.png",
-    description: "Traditional premium gold joss paper money used for Chinese rituals.",
-    stock_level: 85,
-    low_stock_threshold: 20,
-  },
-  {
-    name: "Sandalwood Incense (Box)",
-    category: "Incense",
-    price: 12.0,
-    image_url:
-      "https://images.unsplash.com/photo-1616422285623-14bf7622616f?auto=format&fit=crop&q=80",
-    description: "High-quality sandalwood incense sticks with low smoke.",
-    stock_level: 42,
-    low_stock_threshold: 20,
-  },
-  {
-    name: "Giant Red Candles (Pair)",
-    category: "Candles",
-    price: 18.0,
-    image_url: "/images/red_candles.png",
-    description: "Thick red incense candles with gold Chinese characters inscribed.",
-    stock_level: 15,
-    low_stock_threshold: 20,
-  },
-  {
-    name: "Ceremonial Nana Banana",
-    category: "Food Offerings",
-    price: 6.5,
-    image_url: "/images/nana_banana.png",
-    description:
-      "Fresh, vibrant yellow bananas placed on an elegant traditional red plate for offerings.",
-    stock_level: 120,
-    low_stock_threshold: 20,
-  },
-  {
-    name: "Paper Clothing (Male Set)",
-    category: "Paper Offerings",
-    price: 8.5,
-    image_url:
-      "https://images.unsplash.com/photo-1543834571-3d75c0211f4c?auto=format&fit=crop&q=80",
-    description: "Traditional paper clothing offering set.",
-    stock_level: 63,
-    low_stock_threshold: 20,
-  },
-  {
-    name: "Tea Leaves Offering Pack",
-    category: "Food Offerings",
-    price: 4.0,
-    image_url:
-      "https://images.unsplash.com/photo-1574888279857-4171876f9247?auto=format&fit=crop&q=80",
-    description: "Premium tea leaves for daily altar rituals.",
-    stock_level: 95,
-    low_stock_threshold: 20,
-  },
-];
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
+  description: string;
+}
 
-export const prods2 = [
+export interface InventoryItem extends Product {
+  stock: number;
+  threshold: number;
+}
+
+export const PRODUCTS: Product[] = [
   {
     id: "PROD-001",
     name: "Premium Gold Joss Paper (Stack)",
@@ -109,4 +62,28 @@ export const prods2 = [
     image: "/images/tea_leaves.png",
     description: "Premium tea leaves for daily altar rituals.",
   },
+  {
+    id: "PROD-007",
+    name: "Traditional Lamp Oil (1L)",
+    category: "Altar Supplies",
+    price: 14.0,
+    image: "/images/lamp_oil.png",
+    description:
+      "Premium aromatic oil for longevity lamps and continuous burning at household altars.",
+  },
+  {
+    id: "PROD-008",
+    name: "Paper Smartphone & Tablet Set",
+    category: "Paper Offerings",
+    price: 22.0,
+    image: "/images/paper_smartphone.png",
+    description:
+      "Modern afterlife offerings including a life-size paper smartphone and accessories.",
+  },
 ];
+
+export const MOCK_INVENTORY: InventoryItem[] = PRODUCTS.map((p) => ({
+  ...p,
+  stock: Math.floor(Math.random() * 100) + 5, // Random stock between 5-105
+  threshold: 20,
+}));

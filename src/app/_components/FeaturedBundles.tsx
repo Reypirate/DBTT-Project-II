@@ -20,7 +20,7 @@ export default function FeaturedBundles() {
   const featuredBundles = BUNDLES.slice(0, 4);
 
   return (
-    <section className="py-24 bg-white border-y border-neutral-main overflow-hidden">
+    <section className="py-24 bg-surface border-y border-neutral-main overflow-hidden">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12">
           <div>
@@ -64,7 +64,7 @@ export default function FeaturedBundles() {
                         </Badge>
                       </div>
                     </div>
-                    <CardContent className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
+                    <CardContent className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-surface">
                       <h3 className="font-playfair text-3xl font-bold text-text-main mb-4">
                         {bundle.name}
                       </h3>
