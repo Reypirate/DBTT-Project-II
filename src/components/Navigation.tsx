@@ -10,8 +10,11 @@ export const Navigation = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-neutral-main p-4 flex justify-between items-center shadow-sm">
-      <Link href="/" className="font-playfair text-2xl font-bold text-primary">
-        MyLegacy
+      <Link
+        href={isAdmin ? "/admin" : "/"}
+        className="font-playfair text-2xl font-bold text-primary"
+      >
+        Hin Long
       </Link>
       <nav className="flex gap-6 items-center">
         {!isAdmin && (

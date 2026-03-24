@@ -45,9 +45,22 @@ export async function POST(req: Request) {
     const { prompt, tier } = await req.json();
     const isSubscriber = tier === "Subscriber";
 
-    console.log("Prompt:", prompt, "Tier:", tier);
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: "GEMINI_API_KEY is missing in .env" }, { status: 500 });
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+    if (!apiKey) {
+      console.error(
+        "AI Advisor: No API Key found in process.env (checked GEMINI_API_KEY, GOOGLE_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY).",
+      );
+      return NextResponse.json(
+        {
+          error: "GEMINI_API_KEY is missing in your .env",
+          hint: "Please ensure you have GEMINI_API_KEY=AIza... in your .env file and have FULLY RESTARTED your dev server (Ctrl+C and pnpm run dev).",
+        },
+        { status: 500 },
+      );
     }
 
     const DYNAMIC_PROMPT = `${SYSTEM_PROMPT}
@@ -64,7 +77,7 @@ export async function POST(req: Request) {
 
     // Generate output using TanStack AI chat constrained by schema
     const response = await chat({
-      adapter: Gemini.geminiText("gemini-3.1-flash-lite-preview"),
+      adapter: Gemini.geminiText("gemini-2.0-flash"),
       systemPrompts: [DYNAMIC_PROMPT],
       messages: [
         {
@@ -75,11 +88,23 @@ export async function POST(req: Request) {
       // TanStack AI uses outputSchema for structured validations
       outputSchema: advisorSchema,
     });
-    console.log("Response:", response);
+
+    // Log for debugging (visible in dev terminal)
+    console.log("AI Response Structure:", JSON.stringify(response, null, 2));
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error("Chat Error:", error);
-    return NextResponse.json({ error: error.message || "Something went wrong" }, { status: 500 });
+    console.error("DEBUG: Chat Error Object:", error);
+    const errorMessage = error.message || "Something went wrong";
+    const errorDetails = error.cause || error.stack || "No extra details";
+
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        details: errorDetails,
+        hint: "Check if the GEMINI_API_KEY is valid and the model name is correct for @tanstack/ai-gemini.",
+      },
+      { status: 500 },
+    );
   }
 }

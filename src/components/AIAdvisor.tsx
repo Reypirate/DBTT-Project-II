@@ -64,7 +64,14 @@ export function AIAdvisor() {
       });
 
       const result = await res.json();
-      const aiData = result.content || result;
+
+      if (!res.ok) {
+        console.error("AI Advisor API Fail:", result);
+        throw new Error(result.error || "AI Advisor temporarily unavailable");
+      }
+
+      // Handle TanStack AI response structures
+      const aiData = result.output || result.content || result;
 
       setMessages((prev) => [
         ...prev,

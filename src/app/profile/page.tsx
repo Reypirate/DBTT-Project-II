@@ -7,11 +7,40 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Clock, Zap, Video, History, Bell, Flame } from "lucide-react";
+import {
+  Check,
+  Crown,
+  Clock,
+  Zap,
+  Video,
+  History,
+  Bell,
+  Flame,
+  PlayCircle,
+  Settings2,
+} from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, updateTier } = useAuth();
   const router = useRouter();
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [reminders, setReminders] = useState({
+    rituals: true,
+    ancestors: true,
+    marketing: false,
+  });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -165,11 +194,22 @@ export default function ProfilePage() {
                           In Progress
                         </Badge>
                       </div>
-                      <div className="text-xs p-2 bg-primary/5 rounded border border-primary/10 flex justify-between items-center">
-                        <span>Ancestor Veneration</span>
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-[9px] h-4">
-                          Completed
-                        </Badge>
+                      <div className="text-xs p-2 bg-green-50 rounded border border-green-100 flex justify-between items-center">
+                        <div className="flex flex-col">
+                          <span>Ancestor Veneration</span>
+                          <span className="text-[10px] text-green-600 font-medium">
+                            Video Ready
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-primary gap-1"
+                          onClick={() => setVideoOpen(true)}
+                        >
+                          <PlayCircle className="size-3" />
+                          Watch
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -194,9 +234,57 @@ export default function ProfilePage() {
                   Manage how we remind you of upcoming rituals for ancestor remembrance and major
                   festivals.
                 </p>
-                <Button variant="outline" className="w-full text-sm" disabled={!isSubscriber}>
-                  Configure Reminders
-                </Button>
+                <Dialog open={reminderOpen} onOpenChange={setReminderOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full text-sm" disabled={!isSubscriber}>
+                      <Settings2 className="size-4 mr-2" />
+                      Configure Reminders
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[400px]">
+                    <DialogHeader>
+                      <DialogTitle className="font-playfair text-2xl">
+                        Notification Settings
+                      </DialogTitle>
+                      <CardDescription>Choose which alerts you'd like to receive.</CardDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Major Ritual Dates</Label>
+                          <p className="text-xs text-text-main/60">
+                            Reminders for Qingming, Hungry Ghost, etc.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={reminders.rituals}
+                          onCheckedChange={(checked: boolean) =>
+                            setReminders({ ...reminders, rituals: checked })
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Ancestor Anniversaries</Label>
+                          <p className="text-xs text-text-main/60">
+                            Birthdays and passing dates of your loved ones.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={reminders.ancestors}
+                          onCheckedChange={(checked: boolean) =>
+                            setReminders({ ...reminders, ancestors: checked })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => setReminderOpen(false)} className="w-full">
+                        Save Preferences
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 {!isSubscriber && (
                   <p className="text-[10px] text-red-500 mt-2 text-center uppercase font-bold">
                     Requires Subscriber Tier
@@ -223,6 +311,48 @@ export default function ProfilePage() {
             </Card>
           </div>
         </div>
+
+        {/* Video Confirmation Modal */}
+        <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
+          <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-black">
+            <div className="aspect-video w-full bg-neutral-900 flex items-center justify-center relative">
+              <div className="absolute inset-0 flex items-center justify-center flex-col text-white/40 gap-4">
+                <Video className="size-16 opacity-20" />
+                <p className="text-sm font-playfair italic">
+                  Video Confirmation: Ancestor Veneration Ritual
+                </p>
+                <div className="mt-4 px-4 py-2 border border-white/20 rounded-full text-xs font-bold bg-white/5">
+                  SIMULATED PLAYBACK ENABLED
+                </div>
+              </div>
+              <div className="absolute bottom-4 left-4 right-4 h-1 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-primary w-1/3" />
+              </div>
+            </div>
+            <div className="p-6 bg-surface border-t border-neutral-main">
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <DialogTitle className="font-playfair text-2xl">Ritual Recording</DialogTitle>
+                    <CardDescription>
+                      Performed by Hin Long Master on March 15, 2026
+                    </CardDescription>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">Verified</Badge>
+                </div>
+              </DialogHeader>
+              <div className="mt-4 text-sm text-text-main/70 italic">
+                "We have respectfully offered the Respect Bundle for your ancestors. May their
+                blessings be with you."
+              </div>
+              <DialogFooter className="mt-6">
+                <Button onClick={() => setVideoOpen(false)} className="w-full">
+                  Close Recording
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

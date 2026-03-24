@@ -26,46 +26,67 @@ import { RemembranceCard } from "./_components/RemembranceCard";
 import { UPCOMING_RITUALS } from "@/data/rituals";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
 
 const INITIAL_REMEMBRANCES = UPCOMING_RITUALS.filter((r) => r.type === "personal");
 
 export default function RemembrancePage() {
   const { user } = useAuth();
   const isSubscriber = user?.tier === "Subscriber";
-  const [remembrances, setRemembrances] = useState(INITIAL_REMEMBRANCES);
+
+  const [remembrances, setRemembrances] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Form State
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("");
   const [description, setDescription] = useState("");
-  const [dateType, setDateType] = useState("");
-  const [date, setDate] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [passingDate, setPassingDate] = useState("");
   const [dialect, setDialect] = useState("");
 
+  // Load from localStorage
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("hinlong_remembrances");
+    if (saved) {
+      setRemembrances(JSON.parse(saved));
+    } else {
+      setRemembrances(INITIAL_REMEMBRANCES);
+    }
+  }, []);
+
+  if (!mounted) return null;
+
+  if (!isSubscriber) {
+    return <RemembranceGate />;
+  }
+
   const handleAdd = () => {
-    if (!name || !relation || !date || !dateType) return;
+    if (!name || !relation) return;
 
     const newEntry = {
       id: `personal-${Date.now()}`,
       name: `${name} (${relation})`,
-      date,
-      lunarDate: "Calculated automatically",
-      description:
-        description ||
-        `${dialect ? `${dialect} tradition.` : "Family tradition."} ${dateType === "passing" ? "Passing anniversary." : "Birthday remembrance."}`,
+      birthday: birthday || null,
+      passingDate: passingDate || null,
+      lunarDate: "Lunar details updated periodically",
+      description: description || `${dialect ? `${dialect} tradition.` : "Family tradition."}`,
       type: "personal",
       isUpcoming: true,
     };
 
-    setRemembrances([...remembrances, newEntry]);
+    const updated = [...remembrances, newEntry];
+    setRemembrances(updated);
+    localStorage.setItem("hinlong_remembrances", JSON.stringify(updated));
     setOpen(false);
     // Reset Form
     setName("");
     setRelation("");
     setDescription("");
-    setDateType("");
-    setDate("");
+    setBirthday("");
+    setPassingDate("");
     setDialect("");
   };
 
@@ -145,30 +166,21 @@ export default function RemembrancePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="dateType">Date Type</Label>
-                    <Select value={dateType} onValueChange={setDateType}>
-                      <SelectTrigger id="dateType">
-                        <SelectValue placeholder="Choose type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="passing">Passing Anniversary</SelectItem>
-                        <SelectItem value="birthday">Birthday</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="birthday">Birthday</Label>
+                    <Input
+                      id="birthday"
+                      type="date"
+                      value={birthday}
+                      onChange={(e) => setBirthday(e.target.value)}
+                    />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="date">
-                      {dateType === "birthday"
-                        ? "Birthday"
-                        : dateType === "passing"
-                          ? "Passing Date"
-                          : "Date"}
-                    </Label>
+                    <Label htmlFor="passingDate">Passing Anniversary</Label>
                     <Input
-                      id="date"
+                      id="passingDate"
                       type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                      value={passingDate}
+                      onChange={(e) => setPassingDate(e.target.value)}
                     />
                   </div>
                 </div>
@@ -225,6 +237,39 @@ export default function RemembrancePage() {
               )}
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RemembranceGate() {
+  return (
+    <div className="bg-background-main min-h-screen py-10 lg:py-24">
+      <div className="container mx-auto px-6 lg:px-12 max-w-4xl text-center">
+        <div className="p-12 bg-surface border border-neutral-main rounded-3xl shadow-sm">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto mb-8">
+            <Heart className="size-10 fill-primary/20" />
+          </div>
+          <h1 className="font-playfair text-4xl font-bold text-text-main mb-4">
+            Ancestor Remembrance Dashboard
+          </h1>
+          <p className="text-xl text-text-main/70 mb-8 max-w-2xl mx-auto">
+            Build a legacy calendar for your loved ones. Subscribers can track important dates,
+            receive reminders, and book proxy burning services for birthdays and anniversaries.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/subscribe">
+              <Button size="lg" className="px-10 font-bold text-lg h-14">
+                Upgrade to Subscriber
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline" size="lg" className="px-10 font-bold text-lg h-14">
+                Return Home
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
