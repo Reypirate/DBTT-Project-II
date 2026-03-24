@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -16,6 +16,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { BUNDLES } from "@/data/bundles";
 import { PRODUCTS } from "@/data/products";
+
+import { useAuth } from "@/context/AuthContext";
 
 const INITIAL_SUGGESTIONS = [
   "Grandparents' death anniversary offerings",
@@ -34,6 +36,7 @@ interface AdvisorMessage {
 }
 
 export function AIAdvisor() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<AdvisorMessage[]>([
     {
       role: "advisor",
@@ -54,7 +57,10 @@ export function AIAdvisor() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text }),
+        body: JSON.stringify({
+          prompt: text,
+          tier: user?.tier || "Free",
+        }),
       });
 
       const result = await res.json();
@@ -99,9 +105,17 @@ export function AIAdvisor() {
         </DrawerTrigger>
         <DrawerContent className="max-h-[80vh] bg-surface border-neutral-main/40">
           <DrawerHeader className="border-b border-neutral-main/20 pb-4">
-            <DrawerTitle className="font-playfair text-2xl text-primary flex items-center gap-2">
-              <Sparkles className="size-5" />
-              The Heritage Advisor
+            <DrawerTitle className="font-playfair text-2xl text-primary flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5" />
+                The Heritage Advisor
+              </div>
+              {user?.tier === "Subscriber" && (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20">
+                  <Crown className="size-3" />
+                  Premium
+                </div>
+              )}
             </DrawerTitle>
           </DrawerHeader>
 

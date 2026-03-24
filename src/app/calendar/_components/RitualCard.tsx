@@ -1,7 +1,11 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { Calendar as CalendarIcon, ChevronRight, Info, Moon } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+
+import { useAuth } from "@/context/AuthContext";
 
 export interface Ritual {
   id: string;
@@ -14,6 +18,9 @@ export interface Ritual {
 }
 
 export default function RitualCard({ ritual }: { ritual: Ritual }) {
+  const { user } = useAuth();
+  const isSubscriber = user?.tier === "Subscriber";
+
   return (
     <Card
       className={`overflow-hidden transition-all hover:shadow-md ${ritual.isUpcoming ? "border-primary/30 shadow-sm" : "border-neutral-main"}`}
@@ -72,13 +79,22 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
               We recommend preordering 7 days in advance.
             </div>
 
-            <Link
-              href="/bundles"
-              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium group"
-            >
-              View Recommended Bundles
-              <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            {isSubscriber ? (
+              <Link
+                href="/bundles"
+                className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium group"
+              >
+                View Recommended Bundles
+                <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-[10px] uppercase font-bold text-primary/40 border-primary/20"
+              >
+                Bundle Recommendations (Sub Only)
+              </Badge>
+            )}
           </div>
         </div>
       </div>

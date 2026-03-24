@@ -1,9 +1,10 @@
 "use client";
 
-import { Package, TrendingUp, Users, ShoppingBag } from "lucide-react";
+import { Package, TrendingUp, Users, ShoppingBag, Flame, Check, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   ChartContainer,
   ChartTooltip,
@@ -11,6 +12,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis } from "recharts";
+import { useState } from "react";
 
 const revenueData = [
   { month: "Jan", revenue: 4200, orders: 45 },
@@ -52,7 +54,48 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 } as const;
 
+const INITIAL_PROXY_QUEUE = [
+  {
+    id: "PXY-001",
+    customer: "Rey",
+    ancestor: "Grandfather Lim",
+    date: "2026-04-05",
+    bundle: "Qingming Essential Kit",
+    status: "pending" as const,
+  },
+  {
+    id: "PXY-002",
+    customer: "Sarah Tan",
+    ancestor: "Grandmother Wong",
+    date: "2026-04-12",
+    bundle: "Everyday Deity Offering Set",
+    status: "in-progress" as const,
+  },
+  {
+    id: "PXY-003",
+    customer: "James Lee",
+    ancestor: "Father Lee",
+    date: "2026-03-28",
+    bundle: "7th Month Hungry Ghost Bundle",
+    status: "completed" as const,
+  },
+];
+
 export default function AdminDashboardPage() {
+  const [proxyQueue, setProxyQueue] = useState(INITIAL_PROXY_QUEUE);
+
+  const updateProxyStatus = (id: string, newStatus: "pending" | "in-progress" | "completed") => {
+    setProxyQueue((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)),
+    );
+  };
+
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+    "in-progress": "bg-blue-100 text-blue-700 hover:bg-blue-100",
+    completed: "bg-green-100 text-green-700 hover:bg-green-100",
+  };
+
   return (
     <div className="bg-background-main min-h-screen py-10 lg:py-12">
       <div className="container mx-auto px-6 lg:px-12 max-w-7xl">
@@ -142,6 +185,78 @@ export default function AdminDashboardPage() {
               </div>
             </Card>
           </motion.div>
+        </motion.div>
+
+        {/* Proxy Service Queue */}
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="mb-10">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                <Flame className="size-5 text-primary" />
+                Proxy Service Queue
+                <Badge className="ml-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px]">
+                  {proxyQueue.filter((p) => p.status !== "completed").length} Active
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {proxyQueue.map((request) => (
+                  <div
+                    key={request.id}
+                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-surface border border-neutral-main/30 rounded-xl"
+                  >
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-sm text-text-main">{request.id}</p>
+                        <Badge className={`text-[9px] h-4 ${statusColors[request.status]}`}>
+                          {request.status === "in-progress"
+                            ? "In Progress"
+                            : request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-text-main/60">
+                        <strong>{request.customer}</strong> → {request.ancestor} · {request.bundle}{" "}
+                        ·{" "}
+                        {new Date(request.date).toLocaleDateString("en-SG", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {request.status === "pending" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs gap-1"
+                          onClick={() => updateProxyStatus(request.id, "in-progress")}
+                        >
+                          Start Fulfillment
+                        </Button>
+                      )}
+                      {request.status === "in-progress" && (
+                        <Button
+                          size="sm"
+                          className="text-xs gap-1"
+                          onClick={() => updateProxyStatus(request.id, "completed")}
+                        >
+                          <Video className="size-3" />
+                          Mark Complete
+                        </Button>
+                      )}
+                      {request.status === "completed" && (
+                        <div className="flex items-center gap-1 text-xs text-green-600 font-bold">
+                          <Check className="size-3" />
+                          Done
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Orders Overview */}

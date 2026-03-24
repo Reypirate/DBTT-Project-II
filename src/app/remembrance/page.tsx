@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, UserPlus } from "lucide-react";
+import { Heart, UserPlus, Bell, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -23,28 +24,36 @@ import {
 } from "@/components/ui/select";
 import { RemembranceCard } from "./_components/RemembranceCard";
 import { UPCOMING_RITUALS } from "@/data/rituals";
+import { useAuth } from "@/context/AuthContext";
+import { Badge } from "@/components/ui/badge";
 
 const INITIAL_REMEMBRANCES = UPCOMING_RITUALS.filter((r) => r.type === "personal");
 
 export default function RemembrancePage() {
+  const { user } = useAuth();
+  const isSubscriber = user?.tier === "Subscriber";
   const [remembrances, setRemembrances] = useState(INITIAL_REMEMBRANCES);
   const [open, setOpen] = useState(false);
 
   // Form State
   const [name, setName] = useState("");
   const [relation, setRelation] = useState("");
+  const [description, setDescription] = useState("");
+  const [dateType, setDateType] = useState("");
   const [date, setDate] = useState("");
   const [dialect, setDialect] = useState("");
 
   const handleAdd = () => {
-    if (!name || !relation || !date) return;
+    if (!name || !relation || !date || !dateType) return;
 
     const newEntry = {
       id: `personal-${Date.now()}`,
       name: `${name} (${relation})`,
       date,
       lunarDate: "Calculated automatically",
-      description: `${dialect ? `${dialect} tradition.` : "Family tradition."}`,
+      description:
+        description ||
+        `${dialect ? `${dialect} tradition.` : "Family tradition."} ${dateType === "passing" ? "Passing anniversary." : "Birthday remembrance."}`,
       type: "personal",
       isUpcoming: true,
     };
@@ -54,6 +63,8 @@ export default function RemembrancePage() {
     // Reset Form
     setName("");
     setRelation("");
+    setDescription("");
+    setDateType("");
     setDate("");
     setDialect("");
   };
@@ -71,6 +82,14 @@ export default function RemembrancePage() {
               Build your family’s ancestral calendar. We track the dates and recommend culturally
               accurately sets to honor your loved ones respectfully.
             </p>
+            {isSubscriber && (
+              <Badge
+                variant="default"
+                className="mt-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+              >
+                Subscriber Advantage: Proxy Services Enabled
+              </Badge>
+            )}
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
@@ -80,11 +99,12 @@ export default function RemembrancePage() {
                 Add Ancestor
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[480px]">
               <DialogHeader>
                 <DialogTitle className="font-playfair text-2xl">Add Ancestral Profile</DialogTitle>
                 <CardDescription>
-                  Inscribe important dates for personalized subscription setups.
+                  Inscribe important dates and details for personalized ritual preparation and
+                  remembrance services.
                 </CardDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -108,18 +128,49 @@ export default function RemembrancePage() {
                       <SelectItem value="Grandmother">Grandmother</SelectItem>
                       <SelectItem value="Father">Father</SelectItem>
                       <SelectItem value="Mother">Mother</SelectItem>
+                      <SelectItem value="Uncle">Uncle</SelectItem>
+                      <SelectItem value="Aunt">Aunt</SelectItem>
                       <SelectItem value="Other">Other Relation</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="date">Important Date (Passing or Birthday)</Label>
+                  <Label htmlFor="description">Description (Optional)</Label>
                   <Input
-                    id="date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    id="description"
+                    placeholder="e.g., Loved gardening and cooking Hokkien recipes"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="dateType">Date Type</Label>
+                    <Select value={dateType} onValueChange={setDateType}>
+                      <SelectTrigger id="dateType">
+                        <SelectValue placeholder="Choose type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="passing">Passing Anniversary</SelectItem>
+                        <SelectItem value="birthday">Birthday</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="date">
+                      {dateType === "birthday"
+                        ? "Birthday"
+                        : dateType === "passing"
+                          ? "Passing Date"
+                          : "Date"}
+                    </Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="dialect">Dialect Group (Optional)</Label>
@@ -148,7 +199,31 @@ export default function RemembrancePage() {
         {/* Remembrances Cards */}
         <div className="grid md:grid-cols-2 gap-6">
           {remembrances.map((item) => (
-            <RemembranceCard key={item.id} item={item} />
+            <div key={item.id} className="space-y-4">
+              <RemembranceCard item={item} />
+              {isSubscriber && (
+                <div className="bg-surface border border-neutral-main rounded-xl p-4 flex justify-between items-center shadow-sm">
+                  <div className="flex gap-4">
+                    <Button size="sm" variant="ghost" className="gap-2 text-secondary px-2">
+                      <Bell className="size-4" />
+                      Active
+                    </Button>
+                    <Link href="/proxy-request">
+                      <Button size="sm" variant="ghost" className="gap-2 text-primary px-2">
+                        <Flame className="size-4" />
+                        Book Proxy
+                      </Button>
+                    </Link>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] uppercase font-bold text-text-main/40"
+                  >
+                    Sub Access
+                  </Badge>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>

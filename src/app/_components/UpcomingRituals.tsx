@@ -1,11 +1,16 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
-import { CalendarHeart } from "lucide-react";
+import { CalendarHeart, Flame, Bell } from "lucide-react";
 import { UPCOMING_RITUALS } from "@/data/rituals";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UpcomingRituals() {
+  const { user } = useAuth();
   const upcomingRituals = UPCOMING_RITUALS.filter((r) => r.isUpcoming).slice(0, 3);
+  const isSubscriber = user?.tier === "Subscriber";
 
   return (
     <section className="py-24 bg-background-main">
@@ -46,11 +51,32 @@ export default function UpcomingRituals() {
                   {ritual.name}
                 </h3>
                 <p className="text-text-main/70 leading-relaxed mb-4">{ritual.description}</p>
+
+                {isSubscriber && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="gap-2 bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20"
+                    >
+                      <Bell className="size-4" />
+                      Reminders Active
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                    >
+                      <Flame className="size-4" />
+                      Request Proxy Burning
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              <div className="flex-shrink-0 self-start md:self-center w-full md:w-auto">
-                <Button asChild variant="outline">
-                  <Link href="/calendar">Set Reminder</Link>
+              <div className="flex-shrink-0 self-start md:self-center w-full md:w-auto flex flex-col gap-2">
+                <Button asChild variant={isSubscriber ? "ghost" : "outline"}>
+                  <Link href="/calendar">{isSubscriber ? "View Management" : "Set Reminder"}</Link>
                 </Button>
               </div>
             </Card>

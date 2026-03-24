@@ -1,6 +1,5 @@
 import "../globals.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { ThemeProvider } from "next-themes";
+import { Providers } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
 import { AIAdvisor } from "@/components/AIAdvisor";
 import React from "react";
@@ -25,15 +24,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col transition-colors duration-200">
-              <Navigation />
-              <main className="flex-grow">{children}</main>
-              <AIAdvisor />
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+        <Providers>
+          <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col transition-colors duration-200">
+            <Navigation />
+            <main className="flex-grow">{children}</main>
+            <AIAdvisor />
+          </div>
+        </Providers>
       </body>
     </html>
   );

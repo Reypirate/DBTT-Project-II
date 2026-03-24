@@ -1,236 +1,221 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Clock, CreditCard, ChevronRight, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { BUNDLES } from "@/data/bundles";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Crown, ShieldCheck, Lock, Check, Loader2 } from "lucide-react";
 
 export default function CheckoutPage() {
-  const [paymentMethod, setPaymentMethod] = useState<"paynow" | "card">("paynow");
-  const [isSuccess, setIsSuccess] = useState(false);
+  const { user, isAuthenticated, updateTier } = useAuth();
   const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
-  // Hardcoded for prototype representation
-  const cartItem = BUNDLES.length > 0 ? BUNDLES[0] : null;
-  const total = cartItem ? cartItem.price : 0;
+  // Redirect if not logged in
+  if (!isAuthenticated) {
+    router.push("/login");
+    return null;
+  }
 
-  const handlePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSuccess(true);
-    setTimeout(() => {
-      router.push("/");
-    }, 2000);
+  // If already a subscriber
+  if (user?.tier === "Subscriber" && !isComplete) {
+    router.push("/profile");
+    return null;
+  }
+
+  const handleCheckout = async () => {
+    setIsProcessing(true);
+
+    // Simulate payment processing
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    updateTier("Subscriber");
+    setIsProcessing(false);
+    setIsComplete(true);
   };
 
-  if (isSuccess) {
+  if (isComplete) {
     return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center py-12 px-6">
-        <Card className="max-w-md w-full border border-neutral-main shadow-xl text-center p-8 md:p-12 animate-fade-in-up">
-          <CardContent className="pt-6">
-            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="size-10" />
+      <div className="min-h-[80vh] flex items-center justify-center bg-background-main p-6">
+        <Card className="w-full max-w-md text-center border-primary/30 shadow-xl">
+          <CardContent className="pt-12 pb-10 space-y-6">
+            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <Check className="size-10 text-green-600" strokeWidth={3} />
             </div>
-            <h2 className="font-playfair text-3xl font-bold text-text-main mb-4">
-              Payment Successful
-            </h2>
-            <p className="text-text-main/70 mb-8">
-              Your preorder for pickup has been confirmed. You will receive an SMS reminder on the
-              day of pickup.
-            </p>
-            <div className="animate-pulse w-full h-2 bg-neutral-main rounded-full overflow-hidden">
-              <div className="w-1/2 h-full bg-primary rounded-full"></div>
+            <div>
+              <h2 className="font-playfair text-3xl font-bold text-text-main mb-2">
+                Welcome to Premium!
+              </h2>
+              <p className="text-text-main/70">
+                Your subscription is now active. Enjoy personalized heritage guidance, proxy
+                services, and more.
+              </p>
             </div>
-            <p className="text-xs text-text-main/50 mt-4">Redirecting...</p>
+            <div className="flex flex-col gap-3 pt-4">
+              <Button onClick={() => router.push("/profile")} className="font-bold py-5">
+                View Your Profile
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/calendar")}>
+                Explore Ritual Calendar
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (!cartItem) {
-    return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center">
-        <p className="text-text-main/70">Cart is empty.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-background-main min-h-screen py-12">
-      <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-        <h1 className="font-playfair text-4xl font-bold text-text-main mb-8">Preorder Checkout</h1>
+      <div className="container mx-auto px-6 lg:px-12 max-w-4xl">
+        <div className="text-center mb-12">
+          <h1 className="font-playfair text-4xl font-bold text-text-main mb-3">
+            Complete Your Subscription
+          </h1>
+          <p className="text-text-main/70">
+            You're one step away from the full heritage experience
+          </p>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Form Column */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Pickup Details */}
-            <Card className="border border-neutral-main shadow-sm">
+        <div className="grid md:grid-cols-5 gap-8">
+          {/* Payment Form */}
+          <div className="md:col-span-3">
+            <Card className="border-neutral-main shadow-sm">
               <CardHeader>
-                <CardTitle className="font-playfair text-2xl">In-Store Pickup Details</CardTitle>
-                <Separator />
+                <CardTitle className="font-playfair text-xl flex items-center gap-2">
+                  <Lock className="size-4 text-primary" />
+                  Payment Details
+                </CardTitle>
+                <CardDescription>Simulated checkout for prototype demonstration</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6 pt-0">
-                <form className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" defaultValue="John" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" defaultValue="Tan" />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="date" className="flex items-center gap-2">
-                        <Calendar className="size-4" /> Date
-                      </Label>
-                      <Input id="date" type="date" defaultValue="2026-04-01" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Clock className="size-4" /> Time
-                      </Label>
-                      <Select defaultValue="Morning">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Pickup Time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Morning">Morning (09:00 AM - 12:00 PM)</SelectItem>
-                          <SelectItem value="Afternoon">Afternoon (12:00 PM - 03:00 PM)</SelectItem>
-                          <SelectItem value="Late Afternoon">
-                            Late Afternoon (03:00 PM - 06:00 PM)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Payment Method */}
-            <Card className="border border-neutral-main shadow-sm">
-              <CardHeader>
-                <CardTitle className="font-playfair text-2xl">Payment Method</CardTitle>
-                <Separator />
-              </CardHeader>
-              <CardContent className="space-y-4 pt-0">
-                <label
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "paynow" ? "border-primary bg-primary/5" : "border-neutral-main bg-surface"}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="paynow"
-                      checked={paymentMethod === "paynow"}
-                      onChange={() => setPaymentMethod("paynow")}
-                      className="size-5 text-primary focus:ring-primary"
-                    />
-                    <span className="font-bold text-text-main">PayNow / QR Code</span>
-                  </div>
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/PayNow_logo.svg/512px-PayNow_logo.svg.png"
-                    alt="PayNow"
-                    className="h-6 object-contain"
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cardholder">Cardholder Name</Label>
+                  <Input
+                    id="cardholder"
+                    defaultValue={user?.name || ""}
+                    placeholder="Name on card"
+                    className="border-neutral-main"
                   />
-                </label>
-
-                <label
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-neutral-main bg-surface"}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="card"
-                      checked={paymentMethod === "card"}
-                      onChange={() => setPaymentMethod("card")}
-                      className="size-5 text-primary focus:ring-primary"
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardnumber">Card Number</Label>
+                  <Input
+                    id="cardnumber"
+                    defaultValue="4242 4242 4242 4242"
+                    placeholder="1234 5678 9012 3456"
+                    className="border-neutral-main font-mono"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiry">Expiry</Label>
+                    <Input
+                      id="expiry"
+                      defaultValue="12/28"
+                      placeholder="MM/YY"
+                      className="border-neutral-main font-mono"
                     />
-                    <span className="font-bold text-text-main">Credit / Debit Card</span>
                   </div>
-                  <CreditCard className="size-6 text-text-main/70" />
-                </label>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv">CVV</Label>
+                    <Input
+                      id="cvv"
+                      defaultValue="123"
+                      placeholder="123"
+                      className="border-neutral-main font-mono"
+                    />
+                  </div>
+                </div>
 
-                {paymentMethod === "card" && (
-                  <div className="mt-6 space-y-4 animate-fade-in-up">
-                    <Input placeholder="Card Number" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input placeholder="MM/YY" />
-                      <Input placeholder="CVC" />
-                    </div>
-                  </div>
-                )}
+                <Separator className="my-4" />
+
+                <div className="flex items-center gap-2 text-xs text-text-main/50">
+                  <ShieldCheck className="size-4 text-green-600" />
+                  <span>Your payment information is secure and encrypted</span>
+                </div>
+
+                <Button
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className="w-full font-bold py-6 text-base mt-4"
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      Processing Payment...
+                    </span>
+                  ) : (
+                    "Pay $12.90 / month"
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="border border-neutral-main shadow-lg sticky top-8">
+          {/* Order Summary */}
+          <div className="md:col-span-2">
+            <Card className="border-primary/20 bg-primary/[0.02] sticky top-24">
               <CardHeader>
-                <CardTitle className="font-playfair text-2xl">Order Summary</CardTitle>
-                <Separator />
+                <CardTitle className="font-playfair text-lg flex items-center gap-2">
+                  <Crown className="size-5 text-primary" />
+                  Order Summary
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 mb-6">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-surface flex-shrink-0">
-                    <img
-                      src={cartItem.image}
-                      alt={cartItem.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
                   <div>
-                    <h4 className="font-bold text-text-main line-clamp-2">{cartItem.name}</h4>
-                    <p className="text-sm text-text-main/60 mb-1">Qty: 1</p>
-                    <p className="font-bold text-primary">${cartItem.price.toFixed(2)}</p>
+                    <p className="font-bold text-text-main">Subscriber Plan</p>
+                    <p className="text-xs text-text-main/60">Monthly billing</p>
                   </div>
-                </div>
-
-                <div className="space-y-3 mb-6 pt-6 border-t border-neutral-main border-dashed">
-                  <div className="flex justify-between text-text-main/80">
-                    <span>Subtotal</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-text-main/80">
-                    <span>GST (9%)</span>
-                    <span>${(total * 0.09).toFixed(2)}</span>
-                  </div>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10">
+                    Premium
+                  </Badge>
                 </div>
 
                 <Separator />
 
-                <div className="flex justify-between items-center mb-8 pt-4">
-                  <span className="font-bold text-lg">Total</span>
-                  <span className="font-bold text-2xl text-primary">
-                    ${(total * 1.09).toFixed(2)}
-                  </span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-text-main/70">
+                    <span>Subtotal</span>
+                    <span>$12.90</span>
+                  </div>
+                  <div className="flex justify-between text-text-main/70">
+                    <span>GST (9%)</span>
+                    <span>$1.16</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-bold text-text-main text-base pt-1">
+                    <span>Total</span>
+                    <span>$14.06</span>
+                  </div>
                 </div>
 
-                <Button
-                  onClick={handlePayment}
-                  className="w-full h-14 rounded-xl font-bold text-lg gap-2"
-                >
-                  Confirm Preorder
-                  <ChevronRight className="size-5" />
-                </Button>
+                <div className="pt-4 border-t border-neutral-main/20">
+                  <p className="text-[10px] text-text-main/40 uppercase font-bold mb-2">
+                    What you'll get
+                  </p>
+                  <ul className="space-y-1.5 text-xs text-text-main/70">
+                    <li className="flex items-center gap-2">
+                      <Check className="size-3 text-primary" /> Proxy burning service
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="size-3 text-primary" /> Video confirmations
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="size-3 text-primary" /> AI-personalized bundles
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="size-3 text-primary" /> Priority reminders
+                    </li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           </div>

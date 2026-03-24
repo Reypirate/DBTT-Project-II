@@ -42,16 +42,30 @@ Always output structured JSON that strictly follows the schema provided.
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
-    console.log("Prompt:", prompt);
+    const { prompt, tier } = await req.json();
+    const isSubscriber = tier === "Subscriber";
+
+    console.log("Prompt:", prompt, "Tier:", tier);
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ error: "GEMINI_API_KEY is missing in .env" }, { status: 500 });
     }
 
+    const DYNAMIC_PROMPT = `${SYSTEM_PROMPT}
+    
+    ### USER CONTEXT:
+    User Tier: ${tier || "Free"}
+    
+    ${
+      isSubscriber
+        ? "The user is a Premium Subscriber. You should offer highly personalized advice, mention that they can request 'Proxy Burning Services' via their profile, and provide deeper heritage context. Be their dedicated partner in ritual preparation."
+        : "The user is on the Free Tier. Provide helpful basic advice, but occasionally mention that 'Subscribers' get more personalized AI bundle recommendations, proxy burning services, and automated reminders. Keep it subtle and helpful."
+    }
+    `;
+
     // Generate output using TanStack AI chat constrained by schema
     const response = await chat({
       adapter: Gemini.geminiText("gemini-3.1-flash-lite-preview"),
-      systemPrompts: [SYSTEM_PROMPT],
+      systemPrompts: [DYNAMIC_PROMPT],
       messages: [
         {
           role: "user",

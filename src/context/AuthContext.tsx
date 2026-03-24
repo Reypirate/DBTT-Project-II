@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   role: "customer" | "admin";
+  tier?: "Free" | "Subscriber";
 }
 
 interface AuthContextType {
@@ -15,38 +16,76 @@ interface AuthContextType {
   isAdmin: boolean;
   isLoading: boolean;
   logout: () => void;
-  login: (email: string, role: "customer" | "admin") => void;
+  login: (email: string, password?: string) => { success: boolean; message?: string };
+  updateTier: (tier: "Free" | "Subscriber") => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = "hinlong_auth_user";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Auto-login prototype user for local simulation nodes
+  // Persistence: Load user from localStorage on mount
   useEffect(() => {
-    // Default admin simulation:
-    setUser({
-      id: "u1",
-      name: "Admin",
-      email: "admin@gmail.com",
-      role: "admin",
-    });
+    const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+    }
     setIsLoading(false);
   }, []);
 
-  const login = (email: string, role: "customer" | "admin") => {
-    setUser({
-      id: "u1",
-      name: role === "admin" ? "Admin" : "Rey",
-      email,
-      role,
-    });
+  const login = (email: string, password?: string) => {
+    // Simulated credential check for prototype
+    const isValid = password === "test123";
+
+    if (!isValid) {
+      return { success: false, message: "Invalid credentials. Use 'test123'." };
+    }
+
+    let newUser: User;
+
+    if (email === "admin@gmail.com") {
+      newUser = {
+        id: "admin-1",
+        name: "Admin",
+        email: "admin@gmail.com",
+        role: "admin",
+      };
+    } else if (email === "rey@gmail.com") {
+      newUser = {
+        id: "rey-1",
+        name: "Rey",
+        email: "rey@gmail.com",
+        role: "customer",
+        tier: "Free", // Default tier for customer
+      };
+    } else {
+      return { success: false, message: "User not found. Try rey@gmail.com or admin@gmail.com." };
+    }
+
+    setUser(newUser);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+    return { success: true };
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  const updateTier = (tier: "Free" | "Subscriber") => {
+    if (user && user.role === "customer") {
+      const updatedUser = { ...user, tier };
+      setUser(updatedUser);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+    }
   };
 
   return (
@@ -58,6 +97,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         logout,
         login,
+        updateTier,
       }}
     >
       {children}
