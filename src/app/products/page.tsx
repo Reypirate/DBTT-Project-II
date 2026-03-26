@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, Minus, Plus, ShoppingBag } from "lucide-react";
-import { PRODUCTS, Product } from "@/data/products";
-import { usePreorder } from "@/context/PreorderContext";
-import { Input } from "@/components/ui/input";
+import { Filter, ShoppingBag } from "lucide-react";
+import { PRODUCTS } from "@/data/products";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

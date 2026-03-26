@@ -1,11 +1,22 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ChevronRight, Info, Moon } from "lucide-react";
-import Link from "next/link";
+import { Calendar as CalendarIcon, Check, ChevronRight, Info, Moon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { BUNDLES } from "@/data/bundles";
 import { useAuth } from "@/context/AuthContext";
+import { usePreorder } from "@/context/PreorderContext";
 
 export interface Ritual {
   id: string;
@@ -17,16 +28,95 @@ export interface Ritual {
   isUpcoming: boolean;
 }
 
+type Bundle = (typeof BUNDLES)[number];
+
+const BUNDLE_BY_ID = new Map<string, Bundle>(BUNDLES.map((bundle) => [bundle.id, bundle]));
+
+function selectBundles(ids: string[]): Bundle[] {
+  return ids
+    .map((id) => BUNDLE_BY_ID.get(id))
+    .filter((bundle): bundle is Bundle => Boolean(bundle));
+}
+
+function getRecommendedBundles(ritual: Ritual): Bundle[] {
+  const normalizedName = ritual.name.toLowerCase();
+
+  if (
+    ritual.type === "personal" ||
+    normalizedName.includes("anniversary") ||
+    normalizedName.includes("ancestor")
+  ) {
+    return selectBundles(["b1", "b2", "b3"]);
+  }
+
+  if (ritual.type === "deity" || normalizedName.includes("guan yin")) {
+    return selectBundles(["b3", "b5", "b4"]);
+  }
+
+  if (
+    ritual.type === "festival" ||
+    normalizedName.includes("ghost") ||
+    normalizedName.includes("qingming")
+  ) {
+    return selectBundles(["b1", "b2", "b4"]);
+  }
+
+  return selectBundles(["b1", "b3", "b5"]);
+}
+
 export default function RitualCard({ ritual }: { ritual: Ritual }) {
   const { user } = useAuth();
+  const { addToPreorder } = usePreorder();
   const isSubscriber = user?.tier === "Subscriber";
+  const [isRecommendationsOpen, setIsRecommendationsOpen] = useState(false);
+  const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
+  const resetTimers = useRef<Record<string, number>>({});
+
+  const recommendedBundles = useMemo(() => getRecommendedBundles(ritual), [ritual]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(resetTimers.current).forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+    };
+  }, []);
+
+  const handleAddToOrder = (bundle: Bundle) => {
+    addToPreorder(
+      {
+        id: bundle.id,
+        name: bundle.name,
+        price: bundle.price,
+        image: bundle.image,
+        kind: "bundle",
+      },
+      1,
+    );
+
+    setRecentlyAdded((prev) => ({ ...prev, [bundle.id]: true }));
+
+    const existingTimeout = resetTimers.current[bundle.id];
+    if (existingTimeout) {
+      window.clearTimeout(existingTimeout);
+    }
+
+    resetTimers.current[bundle.id] = window.setTimeout(() => {
+      setRecentlyAdded((prev) => {
+        if (!prev[bundle.id]) return prev;
+        const next = { ...prev };
+        delete next[bundle.id];
+        return next;
+      });
+      delete resetTimers.current[bundle.id];
+    }, 1500);
+  };
 
   return (
     <Card
       className={`overflow-hidden transition-all hover:shadow-md ${ritual.isUpcoming ? "border-primary/30 shadow-sm" : "border-neutral-main"}`}
     >
       <div className="flex flex-col md:flex-row">
-        {/* Date Block */}
         <div
           className={`p-6 md:w-64 flex flex-col justify-center border-b md:border-b-0 md:border-r border-neutral-main ${ritual.isUpcoming ? "bg-primary/5" : "bg-surface"}`}
         >
@@ -58,7 +148,6 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
           </div>
         </div>
 
-        {/* Details Block */}
         <div className="p-6 md:flex-grow flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -80,13 +169,73 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
             </div>
 
             {isSubscriber ? (
-              <Link
-                href="/bundles"
-                className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium group"
-              >
-                View Recommended Bundles
-                <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <Dialog open={isRecommendationsOpen} onOpenChange={setIsRecommendationsOpen}>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium group"
+                  >
+                    View Recommended Bundles
+                    <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[620px]">
+                  <DialogHeader>
+                    <DialogTitle className="font-playfair text-2xl">
+                      Recommended Bundles
+                    </DialogTitle>
+                    <DialogDescription>
+                      Contextual recommendations for {ritual.name}.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 max-h-[360px] overflow-auto pr-1">
+                    {recommendedBundles.map((bundle) => (
+                      <div
+                        key={bundle.id}
+                        className="rounded-xl border border-neutral-main/40 bg-surface p-4 flex items-start gap-3"
+                      >
+                        <img
+                          src={bundle.image}
+                          alt={bundle.name}
+                          className="h-16 w-16 rounded-md object-cover border border-neutral-main/30"
+                        />
+                        <div className="flex-grow min-w-0">
+                          <p className="font-semibold text-text-main">{bundle.name}</p>
+                          <p className="text-xs text-text-main/70 line-clamp-2 mb-2">
+                            {bundle.description}
+                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-bold text-primary">
+                              ${bundle.price.toFixed(2)}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant={recentlyAdded[bundle.id] ? "default" : "outline"}
+                              disabled={Boolean(recentlyAdded[bundle.id])}
+                              onClick={() => handleAddToOrder(bundle)}
+                              className="inline-flex items-center gap-1"
+                            >
+                              {recentlyAdded[bundle.id] ? (
+                                <>
+                                  <Check className="size-3.5" />
+                                  Added
+                                </>
+                              ) : (
+                                "Add to Order"
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => setIsRecommendationsOpen(false)} className="w-full">
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             ) : (
               <Badge
                 variant="outline"

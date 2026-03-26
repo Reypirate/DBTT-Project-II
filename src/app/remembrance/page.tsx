@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Heart, UserPlus, Bell, Flame } from "lucide-react";
+import { Heart, UserPlus, Bell, Flame, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardDescription } from "@/components/ui/card";
 import Link from "next/link";
@@ -23,22 +23,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RemembranceCard } from "./_components/RemembranceCard";
-import { UPCOMING_RITUALS } from "@/data/rituals";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
 
-const INITIAL_REMEMBRANCES = UPCOMING_RITUALS.filter((r) => r.type === "personal");
+const REMEMBRANCE_STORAGE_KEY = "hinlong_remembrances";
 
 interface RemembranceEntry {
   id: string;
   name: string;
-  birthday?: string | null;
-  passingDate?: string | null;
-  date?: string;
+  birthday: string | null;
+  passingDate: string | null;
   lunarDate: string;
   description: string;
-  type: string;
+  type: "personal";
   isUpcoming: boolean;
 }
 
@@ -60,6 +58,47 @@ const INITIAL_FORM_STATE: RemembranceFormState = {
   dialect: "",
 };
 
+const DEFAULT_REMEMBRANCES: RemembranceEntry[] = [
+  {
+    id: "personal-grandpa-lim",
+    name: "Grandpa Lim (Grandfather)",
+    birthday: "1934-03-11",
+    passingDate: "2012-05-12",
+    lunarDate: "4th Month, 26th Day",
+    description: "Annual remembrance for Grandpa Lim (Hokkien tradition).",
+    type: "personal",
+    isUpcoming: true,
+  },
+  {
+    id: "personal-grandmother-tan",
+    name: "Grandmother Tan (Grandmother)",
+    birthday: "1938-09-02",
+    passingDate: "2018-10-22",
+    lunarDate: "9th Month, 14th Day",
+    description: "Family remembrance for Grandmother Tan with Teochew tradition offerings.",
+    type: "personal",
+    isUpcoming: true,
+  },
+];
+
+function isRemembranceEntry(value: unknown): value is RemembranceEntry {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<RemembranceEntry>;
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.name === "string" &&
+    (candidate.birthday === null ||
+      typeof candidate.birthday === "string" ||
+      candidate.birthday === undefined) &&
+    (candidate.passingDate === null ||
+      typeof candidate.passingDate === "string" ||
+      candidate.passingDate === undefined) &&
+    typeof candidate.description === "string" &&
+    typeof candidate.lunarDate === "string" &&
+    candidate.type === "personal"
+  );
+}
+
 export default function RemembrancePage() {
   const { user } = useAuth();
   const isSubscriber = user?.tier === "Subscriber";
@@ -73,18 +112,24 @@ export default function RemembrancePage() {
   // Load from localStorage
   useEffect(() => {
     setMounted(true);
+
+    const persistDefaults = () => {
+      localStorage.setItem(REMEMBRANCE_STORAGE_KEY, JSON.stringify(DEFAULT_REMEMBRANCES));
+      setRemembrances(DEFAULT_REMEMBRANCES);
+    };
+
     try {
-      const saved = localStorage.getItem("hinlong_remembrances");
+      const saved = localStorage.getItem(REMEMBRANCE_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as RemembranceEntry[];
-        if (Array.isArray(parsed)) {
+        const parsed = JSON.parse(saved) as unknown;
+        if (Array.isArray(parsed) && parsed.every(isRemembranceEntry)) {
           setRemembrances(parsed);
           return;
         }
       }
-      setRemembrances(INITIAL_REMEMBRANCES as unknown as RemembranceEntry[]);
+      persistDefaults();
     } catch {
-      setRemembrances(INITIAL_REMEMBRANCES as unknown as RemembranceEntry[]);
+      persistDefaults();
     }
   }, []);
 
@@ -117,13 +162,21 @@ export default function RemembrancePage() {
 
     setRemembrances((prev) => {
       const updated = [...prev, newEntry];
-      localStorage.setItem("hinlong_remembrances", JSON.stringify(updated));
+      localStorage.setItem(REMEMBRANCE_STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
 
     setFormError(null);
     setOpen(false);
     setForm(INITIAL_FORM_STATE);
+  };
+
+  const removeAncestor = (id: string) => {
+    setRemembrances((prev) => {
+      const updated = prev.filter((entry) => entry.id !== id);
+      localStorage.setItem(REMEMBRANCE_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
@@ -136,7 +189,7 @@ export default function RemembrancePage() {
               My Remembrances
             </h1>
             <p className="text-text-main/70 max-w-xl">
-              Build your family’s ancestral calendar. We track the dates and recommend culturally
+              Build your family's ancestral calendar. We track the dates and recommend culturally
               accurately sets to honor your loved ones respectfully.
             </p>
             {isSubscriber && (
@@ -301,6 +354,15 @@ export default function RemembrancePage() {
                         Book Proxy
                       </Button>
                     </Link>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="gap-2"
+                      onClick={() => removeAncestor(item.id)}
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </Button>
                   </div>
                   <Badge
                     variant="outline"
