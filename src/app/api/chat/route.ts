@@ -3,6 +3,10 @@ import * as Gemini from "@tanstack/ai-gemini";
 import { chat } from "@tanstack/ai";
 import { z } from "zod";
 
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const DEFAULT_MODEL_NAME = DEFAULT_MODEL as Parameters<typeof Gemini.geminiText>[0];
+const ENABLE_FALLBACK = process.env.AI_ADVISOR_FALLBACK !== "false";
+
 const advisorSchema = z.object({
   message: z.string().describe("The main textual advice to the user"),
   recommendedBundles: z.array(z.string()).describe("Names of prebuilt bundles to suggest"),
@@ -11,6 +15,7 @@ const advisorSchema = z.object({
     .array(z.string())
     .describe("Extra traditional or procedural tips based on context"),
 });
+type AdvisorResponse = z.infer<typeof advisorSchema>;
 
 const SYSTEM_PROMPT = `You are the Expert Heritage Advisor for Hin Long Joss Sticks & Papers. 
 Your goal is to guide clients regarding traditional Chinese rituals (like Qingming, Hungry Ghost, Ancestor remembrance) and offer optimal recommendations.
@@ -40,10 +45,139 @@ Always output structured JSON that strictly follows the schema provided.
 3. **Tone**: Be respectful, supportive, and culturally accurate using traditional etiquette inside the \`message\` parameter.
 `;
 
+function getRetryAfterSeconds(errorLike: unknown): number | undefined {
+  const details = (errorLike as any)?.details;
+  if (!Array.isArray(details)) return undefined;
+
+  const retryInfo = details.find((d: any) => d?.["@type"]?.includes("RetryInfo"));
+  const retryDelay = retryInfo?.retryDelay;
+  if (typeof retryDelay !== "string") return undefined;
+
+  const seconds = Number.parseInt(retryDelay.replace("s", ""), 10);
+  return Number.isFinite(seconds) ? seconds : undefined;
+}
+
+function normalizeChatError(error: unknown) {
+  const errorObj = (error as any)?.error ?? (error as any)?.cause ?? error;
+  const code = (errorObj as any)?.code;
+  const statusText = (errorObj as any)?.status;
+  const message =
+    (errorObj as any)?.message ||
+    (error as any)?.message ||
+    "AI advisor request failed unexpectedly.";
+  const isQuota =
+    code === 429 ||
+    statusText === "RESOURCE_EXHAUSTED" ||
+    /quota|rate.?limit|resource_exhausted/i.test(message);
+  const retryAfterSeconds = getRetryAfterSeconds(errorObj);
+
+  return {
+    status: isQuota ? 429 : 500,
+    message: isQuota
+      ? "Gemini quota exceeded. Please retry shortly, or upgrade billing/quota for this API key."
+      : message,
+    providerMessage: message,
+    retryAfterSeconds,
+  };
+}
+
+function buildFallbackAdvice(
+  prompt: string,
+  tier?: string,
+  reason?: string,
+): AdvisorResponse & { fallback: true } {
+  const text = prompt.toLowerCase();
+  const isSubscriber = tier === "Subscriber";
+
+  const recommendedBundles: string[] = [];
+  const recommendedProducts: string[] = [];
+  const helpfulTips: string[] = [];
+
+  if (text.includes("qingming") || text.includes("tomb")) {
+    recommendedBundles.push("Qingming Essential Kit");
+    recommendedProducts.push("Paper Clothing (Male Set)", "Sandalwood Incense (Box)");
+    helpfulTips.push("Prepare offerings one day early to avoid last-minute substitutions.");
+  } else if (
+    text.includes("hungry ghost") ||
+    text.includes("ghost month") ||
+    text.includes("7th month")
+  ) {
+    recommendedBundles.push("7th Month Hungry Ghost Bundle");
+    recommendedProducts.push("Giant Red Candles (Pair)", "Tea Leaves Offering Pack");
+    helpfulTips.push("Offer before late evening and keep rituals respectful and concise.");
+  } else if (text.includes("new house") || text.includes("moving") || text.includes("blessing")) {
+    recommendedBundles.push("New House Blessing Kit");
+    recommendedProducts.push("Traditional Lamp Oil (1L)", "Sandalwood Incense (Box)");
+    helpfulTips.push("Open windows during blessing to symbolize a smooth energy flow.");
+  } else if (text.includes("cny") || text.includes("lunar new year") || text.includes("wealth")) {
+    recommendedBundles.push("CNY Wealth & Prosperity Set");
+    recommendedProducts.push("Giant Red Candles (Pair)", "Premium Gold Joss Paper (Stack)");
+    helpfulTips.push("Start preparations before reunion day to keep offerings calm and orderly.");
+  } else if (
+    text.includes("passing anniversary") ||
+    text.includes("death anniversary") ||
+    text.includes("passing")
+  ) {
+    recommendedBundles.push("Everyday Deity Offering Set", "Qingming Essential Kit");
+    recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
+    helpfulTips.push(
+      "For remembrance anniversaries, start with a simple home setup; scale to Qingming kits for larger family observances.",
+    );
+  } else if (
+    text.includes("birthday") ||
+    text.includes("anniversary") ||
+    text.includes("ancestor") ||
+    text.includes("remembrance")
+  ) {
+    recommendedBundles.push("Everyday Deity Offering Set");
+    recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
+    helpfulTips.push(
+      "Keep the altar clean, use fresh tea, and state names clearly during dedication.",
+    );
+  } else {
+    recommendedBundles.push("Everyday Deity Offering Set");
+    recommendedProducts.push("Premium Gold Joss Paper (Stack)", "Sandalwood Incense (Box)");
+    helpfulTips.push("Use a consistent offering schedule to maintain ritual continuity.");
+  }
+
+  if (isSubscriber) {
+    helpfulTips.push(
+      "As a subscriber, you can combine this with Proxy Burning Services in your profile.",
+    );
+  } else {
+    helpfulTips.push("Subscribers can unlock deeper personalization and ritual reminders.");
+  }
+
+  const fallbackPrefix = reason
+    ? `Live AI is temporarily unavailable (${reason}). `
+    : "Live AI is temporarily unavailable. ";
+
+  return {
+    message: `${fallbackPrefix}Here is a reliable heritage-based recommendation for your request.`,
+    recommendedBundles: Array.from(new Set(recommendedBundles)),
+    recommendedProducts: Array.from(new Set(recommendedProducts)),
+    helpfulTips: Array.from(new Set(helpfulTips)),
+    fallback: true,
+  };
+}
+
 export async function POST(req: Request) {
+  let normalizedPrompt = "";
+  let requestTier = "Free";
+
   try {
     const { prompt, tier } = await req.json();
-    const isSubscriber = tier === "Subscriber";
+    normalizedPrompt = typeof prompt === "string" ? prompt.trim() : "";
+    requestTier = typeof tier === "string" ? tier : "Free";
+
+    if (!normalizedPrompt) {
+      return NextResponse.json(
+        { error: "Prompt is required and must be a non-empty string." },
+        { status: 400 },
+      );
+    }
+
+    const isSubscriber = requestTier === "Subscriber";
 
     const apiKey =
       process.env.GEMINI_API_KEY ||
@@ -51,15 +185,17 @@ export async function POST(req: Request) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
-      // Diagnostic check for ALL visible keys, masked for safety
-      const allKeys = Object.keys(process.env);
-      console.error("AI Advisor: Key missing. All process.env keys:", allKeys);
+      if (ENABLE_FALLBACK) {
+        console.error("AI Advisor API: missing API key, returning fallback response.");
+        return NextResponse.json(
+          buildFallbackAdvice(normalizedPrompt, requestTier, "missing API key"),
+        );
+      }
 
       return NextResponse.json(
         {
           error: "GEMINI_API_KEY is missing in your .env",
-          hint: `Server sees these keys: [${allKeys.join(", ")}]. Check if you have a typo like GEMINI_API_KEY_... or if the file is correctly named .env at the root.`,
-          visibleKeys: allKeys,
+          hint: "Add GEMINI_API_KEY (or GOOGLE_API_KEY) to .env and restart the dev server.",
         },
         { status: 500 },
       );
@@ -68,7 +204,7 @@ export async function POST(req: Request) {
     const DYNAMIC_PROMPT = `${SYSTEM_PROMPT}
     
     ### USER CONTEXT:
-    User Tier: ${tier || "Free"}
+    User Tier: ${requestTier}
     
     ${
       isSubscriber
@@ -79,34 +215,52 @@ export async function POST(req: Request) {
 
     // Generate output using TanStack AI chat constrained by schema
     const response = await chat({
-      adapter: Gemini.geminiText("gemini-2.0-flash"),
+      adapter: Gemini.createGeminiChat(DEFAULT_MODEL_NAME, apiKey),
       systemPrompts: [DYNAMIC_PROMPT],
       messages: [
         {
           role: "user",
-          content: prompt,
+          content: normalizedPrompt,
         },
       ],
       // TanStack AI uses outputSchema for structured validations
       outputSchema: advisorSchema,
     });
 
-    // Log for debugging (visible in dev terminal)
-    console.log("AI Response Structure:", JSON.stringify(response, null, 2));
-
     return NextResponse.json(response);
-  } catch (error: any) {
-    console.error("DEBUG: Chat Error Object:", error);
-    const errorMessage = error.message || "Something went wrong";
-    const errorDetails = error.cause || error.stack || "No extra details";
+  } catch (error: unknown) {
+    const normalized = normalizeChatError(error);
+
+    if (ENABLE_FALLBACK && normalized.status === 429) {
+      console.error(
+        "AI Advisor API: live model rate-limited, returning fallback response.",
+        normalized,
+      );
+      return NextResponse.json(
+        buildFallbackAdvice(
+          normalizedPrompt || "ritual guidance",
+          requestTier,
+          normalized.retryAfterSeconds
+            ? `rate-limited, retry in ${normalized.retryAfterSeconds}s`
+            : "rate-limited",
+        ),
+      );
+    }
+
+    const headers = new Headers();
+    if (normalized.status === 429 && normalized.retryAfterSeconds) {
+      headers.set("Retry-After", String(normalized.retryAfterSeconds));
+    }
+
+    console.error("AI Advisor API: live model failed without fallback.", normalized);
 
     return NextResponse.json(
       {
-        error: errorMessage,
-        details: errorDetails,
-        hint: "Check if the GEMINI_API_KEY is valid and the model name is correct for @tanstack/ai-gemini.",
+        error: normalized.message,
+        providerMessage: normalized.providerMessage,
+        retryAfterSeconds: normalized.retryAfterSeconds,
       },
-      { status: 500 },
+      { status: normalized.status, headers },
     );
   }
 }

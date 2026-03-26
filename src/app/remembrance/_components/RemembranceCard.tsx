@@ -15,11 +15,23 @@ import { BUNDLES } from "@/data/bundles";
 
 import { useAuth } from "@/context/AuthContext";
 
+async function safeReadJson(res: Response) {
+  const raw = await res.text();
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { error: raw };
+  }
+}
+
 export function RemembranceCard({ item }: { item: any }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [tip, setTip] = useState("Ancestor memory rules suggest traditional setups.");
   const [recommendedBundle, setRecommendedBundle] = useState<any>(null);
+  const [isFallbackAdvice, setIsFallbackAdvice] = useState(false);
 
   const isBirthday = !!item.birthday;
   const isPassing = !!item.passingDate;
@@ -44,24 +56,31 @@ export function RemembranceCard({ item }: { item: any }) {
             tier: user?.tier || "Free",
           }),
         });
-        const result = await res.json();
+        const result = await safeReadJson(res);
 
         if (!res.ok) {
-          console.error("RemembranceCard AI Fail:", result);
-          throw new Error(result.error || "AI Tip unavailable");
+          console.error("RemembranceCard AI request failed:", result, "status:", res.status);
+          setTip("AI tip is temporarily unavailable. Please retry shortly.");
+          return;
         }
 
         // Handle TanStack AI response structures
         const aiData = result.output || result.content || result;
+        if (aiData?.fallback) {
+          console.error("RemembranceCard live model unavailable. Using fallback response.", aiData);
+        }
+        setIsFallbackAdvice(Boolean(aiData.fallback));
 
         const generatedTip = aiData.message || (aiData.helpfulTips && aiData.helpfulTips[0]);
         if (generatedTip) setTip(generatedTip);
 
-        if (aiData.recommendedBundles && aiData.recommendedBundles.length > 0) {
+        if (!aiData.fallback && aiData.recommendedBundles && aiData.recommendedBundles.length > 0) {
           const bundle = BUNDLES.find(
             (b) => b.name.toLowerCase() === aiData.recommendedBundles[0]?.toLowerCase(),
           );
           if (bundle) setRecommendedBundle(bundle);
+        } else {
+          setRecommendedBundle(null);
         }
       } catch (err) {
         console.error("AI Tip Error:", err);
@@ -70,7 +89,7 @@ export function RemembranceCard({ item }: { item: any }) {
       }
     };
     fetchTip();
-  }, [item, isBirthday, isPassing]);
+  }, [item, isBirthday, isPassing, user?.tier]);
 
   return (
     <Card className="border border-neutral-main shadow-sm overflow-hidden group hover:border-primary/40 transition-all duration-300">
@@ -139,7 +158,9 @@ export function RemembranceCard({ item }: { item: any }) {
               ? "Loading..."
               : recommendedBundle
                 ? `Order ${recommendedBundle.name}`
-                : "Order Kit"}
+                : isFallbackAdvice
+                  ? "Browse Recommended Kits"
+                  : "Order Kit"}
           </Link>
         </Button>
         <Button variant="outline" size="icon" className="group-hover:text-primary">

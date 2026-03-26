@@ -35,6 +35,35 @@ interface AdvisorMessage {
   };
 }
 
+async function safeReadJson(res: Response) {
+  const raw = await res.text();
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { error: raw };
+  }
+}
+
+function getApiErrorMessage(payload: any, status: number) {
+  const message =
+    payload?.error?.message ||
+    payload?.error ||
+    payload?.providerMessage ||
+    payload?.message ||
+    `Request failed with status ${status}.`;
+  const retryAfter = payload?.retryAfterSeconds;
+
+  if (status === 429) {
+    return retryAfter
+      ? `I am temporarily rate-limited. Please retry in about ${retryAfter} seconds.`
+      : "I am temporarily rate-limited. Please retry in a short while.";
+  }
+
+  return typeof message === "string" ? message : "AI Advisor temporarily unavailable.";
+}
+
 export function AIAdvisor() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<AdvisorMessage[]>([
@@ -47,7 +76,7 @@ export function AIAdvisor() {
   const [isTyping, setIsTyping] = useState(false);
 
   const handleSend = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isTyping) return;
 
     setMessages((prev) => [...prev, { role: "user", text }]);
     setInput("");
@@ -63,15 +92,26 @@ export function AIAdvisor() {
         }),
       });
 
-      const result = await res.json();
+      const result = await safeReadJson(res);
 
       if (!res.ok) {
-        console.error("AI Advisor API Fail:", result);
-        throw new Error(result.error || "AI Advisor temporarily unavailable");
+        const message = getApiErrorMessage(result, res.status);
+        console.error("AI Advisor request failed:", result, "status:", res.status);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "advisor",
+            text: message,
+          },
+        ]);
+        return;
       }
 
       // Handle TanStack AI response structures
       const aiData = result.output || result.content || result;
+      if (aiData?.fallback) {
+        console.error("AI Advisor live model unavailable. Using fallback response.", aiData);
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -86,12 +126,15 @@ export function AIAdvisor() {
         },
       ]);
     } catch (error) {
-      console.error("AI Error:", error);
+      console.error("AI Advisor unexpected error:", error);
       setMessages((prev) => [
         ...prev,
         {
           role: "advisor",
-          text: "I ran into an issue connecting to my lineage knowledge base. Verify GEMINI_API_KEY in .env.",
+          text:
+            error instanceof Error
+              ? error.message
+              : "I ran into an issue while preparing advice. Please try again shortly.",
         },
       ]);
     } finally {
