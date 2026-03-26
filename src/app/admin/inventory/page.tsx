@@ -1,14 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Package, AlertTriangle, Plus, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-// Mock data for Admin Inventory
-const MOCK_INVENTORY = [
+interface InventoryItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  threshold: number;
+}
+
+interface InventoryFormState {
+  name: string;
+  category: string;
+  price: string;
+  stock: string;
+  threshold: string;
+}
+
+const INVENTORY_STORAGE_KEY = "hinlong_owner_inventory";
+
+const DEFAULT_INVENTORY: InventoryItem[] = [
   {
     id: "INV-001",
     name: "Premium Gold Joss Paper",
@@ -51,14 +78,99 @@ const MOCK_INVENTORY = [
   },
 ];
 
+const EMPTY_FORM: InventoryFormState = {
+  name: "",
+  category: "",
+  price: "",
+  stock: "",
+  threshold: "",
+};
+
+function safeReadInventory() {
+  try {
+    const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
+    if (!raw) return DEFAULT_INVENTORY;
+    const parsed = JSON.parse(raw) as InventoryItem[];
+    return Array.isArray(parsed) ? parsed : DEFAULT_INVENTORY;
+  } catch {
+    localStorage.removeItem(INVENTORY_STORAGE_KEY);
+    return DEFAULT_INVENTORY;
+  }
+}
+
 export default function AdminInventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState<InventoryFormState>(EMPTY_FORM);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const filteredItems = MOCK_INVENTORY.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()),
+  useEffect(() => {
+    setItems(safeReadInventory());
+    setHasHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(items));
+  }, [hasHydrated, items]);
+
+  const filteredItems = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return items;
+    return items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query),
+    );
+  }, [items, searchTerm]);
+
+  const lowStockCount = useMemo(
+    () => items.filter((item) => item.stock <= item.threshold).length,
+    [items],
   );
+
+  const handleAddItem = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = form.name.trim();
+    const category = form.category.trim();
+    const price = Number(form.price);
+    const stock = Number(form.stock);
+    const threshold = Number(form.threshold);
+
+    if (
+      !name ||
+      !category ||
+      Number.isNaN(price) ||
+      Number.isNaN(stock) ||
+      Number.isNaN(threshold)
+    ) {
+      setFormError("All fields are required.");
+      return;
+    }
+
+    if (price < 0 || stock < 0 || threshold < 0) {
+      setFormError("Price, stock, and threshold must be non-negative.");
+      return;
+    }
+
+    const nextId = `INV-${String(Date.now()).slice(-6)}`;
+    const newItem: InventoryItem = {
+      id: nextId,
+      name,
+      category,
+      price: Number(price.toFixed(2)),
+      stock: Math.floor(stock),
+      threshold: Math.floor(threshold),
+    };
+
+    setItems((prev) => [newItem, ...prev]);
+    setForm(EMPTY_FORM);
+    setFormError(null);
+    setAddOpen(false);
+  };
 
   return (
     <div className="bg-background-main min-h-screen py-10 lg:py-12">
@@ -68,7 +180,7 @@ export default function AdminInventoryPage() {
             <h1 className="font-playfair text-3xl font-bold text-text-main mb-2 flex items-center gap-3">
               Inventory Tracker
               <Badge variant="destructive" className="flex items-center gap-1 font-bold">
-                <AlertTriangle className="size-3" /> 3 Low Stock
+                <AlertTriangle className="size-3" /> {lowStockCount} Low Stock
               </Badge>
             </h1>
             <p className="text-text-main/70">
@@ -85,9 +197,106 @@ export default function AdminInventoryPage() {
                 className="pl-10 pr-4 py-2.5 border border-neutral-main rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
               />
             </div>
-            <Button className="gap-2 font-bold">
-              <Plus className="size-4" /> Add Item
-            </Button>
+
+            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 font-bold">
+                  <Plus className="size-4" /> Add Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[460px]">
+                <DialogHeader>
+                  <DialogTitle className="font-playfair text-2xl">Add Inventory Item</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddItem} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="itemName">Item Name</Label>
+                    <Input
+                      id="itemName"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Lotus Incense Bundle"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="itemCategory">Category</Label>
+                    <Input
+                      id="itemCategory"
+                      value={form.category}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          category: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Incense"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="itemPrice">Price</Label>
+                      <Input
+                        id="itemPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.price}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            price: e.target.value,
+                          }))
+                        }
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="itemStock">Stock</Label>
+                      <Input
+                        id="itemStock"
+                        type="number"
+                        min="0"
+                        value={form.stock}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            stock: e.target.value,
+                          }))
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="itemThreshold">Threshold</Label>
+                      <Input
+                        id="itemThreshold"
+                        type="number"
+                        min="0"
+                        value={form.threshold}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            threshold: e.target.value,
+                          }))
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  {formError && <p className="text-xs text-red-600 font-medium">{formError}</p>}
+                  <DialogFooter>
+                    <Button type="submit" className="w-full">
+                      Create Item
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

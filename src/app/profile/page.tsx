@@ -2,8 +2,9 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { CUSTOMER_GROUPS, type CustomerGroup } from "@/context/AuthContext";
+import { usePreorder } from "@/context/PreorderContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ import {
   Settings2,
   Users2,
 } from "lucide-react";
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,14 +42,54 @@ import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, updateTier, updateCustomerGroup } = useAuth();
+  const { orderLog } = usePreorder();
   const router = useRouter();
   const [reminderOpen, setReminderOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [orderLogOpen, setOrderLogOpen] = useState(false);
   const [reminders, setReminders] = useState({
     rituals: true,
     ancestors: true,
     marketing: false,
   });
+
+  const fallbackOrderHistory = useMemo(
+    () => [
+      {
+        id: "ORD-2026-910",
+        createdAt: "2026-03-11T10:30:00.000Z",
+        status: "Complete",
+        total: 76.0,
+        items: ["Qingming Essential Kit x2"],
+      },
+      {
+        id: "ORD-2026-922",
+        createdAt: "2026-03-24T15:00:00.000Z",
+        status: "Pending",
+        total: 45.0,
+        items: ["7th Month Hungry Ghost Bundle x1"],
+      },
+    ],
+    [],
+  );
+
+  const orderHistory = orderLog.length
+    ? orderLog.map((entry) => ({
+        id: entry.id,
+        createdAt: entry.createdAt,
+        status: entry.status,
+        total: entry.total,
+        items: entry.items.map((item) => `${item.name} x${item.quantity}`),
+      }))
+    : fallbackOrderHistory;
+
+  const statusStyle: Record<string, string> = {
+    Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    Preparing: "bg-blue-100 text-blue-700 border-blue-200",
+    Ready: "bg-purple-100 text-purple-700 border-purple-200",
+    Complete: "bg-green-100 text-green-700 border-green-200",
+    completed: "bg-green-100 text-green-700 border-green-200",
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -355,9 +395,59 @@ export default function ProfilePage() {
                 <p className="text-sm text-text-main/70 mb-4 italic">
                   Review your past preorders and proxy burning service video recordings.
                 </p>
-                <Button variant="outline" className="w-full text-sm">
-                  View Order Log
-                </Button>
+                <Dialog open={orderLogOpen} onOpenChange={setOrderLogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full text-sm">
+                      View Order Log
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[620px]">
+                    <DialogHeader>
+                      <DialogTitle className="font-playfair text-2xl">Order Log</DialogTitle>
+                      <CardDescription>
+                        Historical preorders and their latest fulfillment statuses.
+                      </CardDescription>
+                    </DialogHeader>
+                    <div className="max-h-[400px] overflow-auto pr-1 space-y-3 py-2">
+                      {orderHistory.map((order) => (
+                        <div
+                          key={order.id}
+                          className="rounded-xl border border-neutral-main/40 bg-surface p-4"
+                        >
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <p className="font-bold text-sm text-primary">{order.id}</p>
+                            <Badge
+                              variant="secondary"
+                              className={`border text-[10px] ${statusStyle[order.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}
+                            >
+                              {order.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-text-main/60 mb-2">
+                            {new Date(order.createdAt).toLocaleDateString("en-SG", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </p>
+                          <ul className="text-xs text-text-main/80 space-y-1 mb-2">
+                            {order.items.map((item, index) => (
+                              <li key={`${order.id}-${index}`}>{item}</li>
+                            ))}
+                          </ul>
+                          <p className="text-sm font-semibold text-text-main">
+                            Total: ${order.total.toFixed(2)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={() => setOrderLogOpen(false)} className="w-full">
+                        Close Log
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </div>

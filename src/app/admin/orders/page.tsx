@@ -63,9 +63,20 @@ const GROUP_COLORS: Record<string, string> = {
 
 export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredOrders =
-    activeTab === "all" ? MOCK_ORDERS : MOCK_ORDERS.filter((o) => o.status === activeTab);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredOrders = MOCK_ORDERS.filter((order) => {
+    const statusMatch = activeTab === "all" || order.status === activeTab;
+    const searchMatch =
+      normalizedQuery.length === 0 ||
+      order.id.toLowerCase().includes(normalizedQuery) ||
+      order.customer.toLowerCase().includes(normalizedQuery) ||
+      order.customerGroup.toLowerCase().includes(normalizedQuery) ||
+      order.status.toLowerCase().includes(normalizedQuery) ||
+      order.items.join(" ").toLowerCase().includes(normalizedQuery);
+    return statusMatch && searchMatch;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,6 +110,8 @@ export default function AdminOrdersPage() {
               <Search className="size-5 absolute left-3 top-1/2 -translate-y-1/2 text-text-main/40" />
               <Input
                 placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-neutral-main rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>

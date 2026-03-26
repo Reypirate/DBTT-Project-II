@@ -71,7 +71,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   Add to Preorder
                 </Button>
                 <p className="text-xs text-center text-text-main/50">
-                  Pickup at Balestier Road Store
+                  Pickup at 638 Jurong West Street 61 #01-05
                 </p>
               </div>
             </div>

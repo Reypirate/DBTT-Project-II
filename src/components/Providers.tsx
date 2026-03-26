@@ -2,12 +2,15 @@
 
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
+import { PreorderProvider } from "@/context/PreorderContext";
 import React from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <PreorderProvider>{children}</PreorderProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

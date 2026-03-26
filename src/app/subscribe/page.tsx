@@ -154,7 +154,7 @@ export default function SubscribePage() {
                       if (!isAuthenticated) {
                         router.push("/login");
                       } else if (tier.name === "Subscriber") {
-                        router.push("/checkout");
+                        router.push("/checkout?mode=subscription");
                       }
                     }}
                   >

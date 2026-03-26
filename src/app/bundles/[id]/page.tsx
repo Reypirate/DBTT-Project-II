@@ -1,13 +1,46 @@
+"use client";
+
 import * as React from "react";
-import { ArrowLeft, ShoppingCart, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, CheckCircle2, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { BUNDLES } from "@/data/bundles";
+import { usePreorder } from "@/context/PreorderContext";
 
 export default function BundleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const bundle = BUNDLES.find((b) => b.id === id);
+  const { addToPreorder, preorderItems } = usePreorder();
+  const [quantityInput, setQuantityInput] = React.useState("1");
+  const [recentlyAdded, setRecentlyAdded] = React.useState(false);
+
+  const quantity = React.useMemo(() => {
+    const parsed = Number.parseInt(quantityInput, 10);
+    if (Number.isNaN(parsed)) return 1;
+    return Math.max(1, Math.min(99, parsed));
+  }, [quantityInput]);
+
+  const updateQuantity = (next: number) => {
+    setQuantityInput(String(Math.max(1, Math.min(99, Math.floor(next)))));
+  };
+
+  const handleAddToPreorder = () => {
+    if (!bundle) return;
+    addToPreorder(
+      {
+        id: bundle.id,
+        name: bundle.name,
+        price: bundle.price,
+        image: bundle.image,
+        kind: "bundle",
+      },
+      quantity,
+    );
+    setRecentlyAdded(true);
+    window.setTimeout(() => setRecentlyAdded(false), 1800);
+  };
 
   if (!bundle) {
     return (
@@ -64,7 +97,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
               <div className="mb-8">
                 <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                   <CheckCircle2 className="size-5 text-secondary" />
-                  What's inside this bundle:
+                  What&apos;s inside this bundle:
                 </h3>
                 <ul className="space-y-3">
                   {bundle.items.map((item: string, index: number) => (
@@ -76,10 +109,60 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
                 </ul>
               </div>
 
-              <Button className="w-full gap-3 font-bold text-lg h-14 mt-auto">
-                <ShoppingCart className="size-5" />
-                Add to Preorder
-              </Button>
+              <div className="mt-auto space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex items-center rounded-lg border border-neutral-main bg-surface">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-r-none"
+                      onClick={() => updateQuantity(quantity - 1)}
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="size-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={quantityInput}
+                      onChange={(e) => setQuantityInput(e.target.value)}
+                      onBlur={() => updateQuantity(quantity)}
+                      className="w-20 text-center border-y-0 border-x border-neutral-main rounded-none h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      aria-label="Quantity"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-l-none"
+                      onClick={() => updateQuantity(quantity + 1)}
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={handleAddToPreorder}
+                    className="flex-1 gap-3 font-bold text-lg h-10"
+                  >
+                    <ShoppingCart className="size-5" />
+                    Add to Preorder
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-text-main/60">
+                  <span>{preorderItems.length} item(s) in preorder cart</span>
+                  <Link href="/checkout" className="text-primary font-semibold hover:underline">
+                    Go to Checkout
+                  </Link>
+                </div>
+
+                {recentlyAdded && (
+                  <p className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
+                    Added {quantity} x {bundle.name} to preorder cart.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

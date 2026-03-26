@@ -2,6 +2,7 @@
 
 import { Package, TrendingUp, Users, Users2, ShoppingBag, Flame, Check, Video } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ const bundleData = [
 
 const customerGroupRevenueData = [
   { group: "Hokkien", revenue: 18400, orders: 192, topProduct: "Qingming Essential Kit" },
+  { group: "Taoist", revenue: 14600, orders: 141, topProduct: "Everyday Deity Offering Set" },
   { group: "Teochew", revenue: 12300, orders: 128, topProduct: "Everyday Deity Offering Set" },
   { group: "Cantonese", revenue: 9800, orders: 98, topProduct: "7th Month Hungry Ghost Bundle" },
   { group: "Hakka", revenue: 5600, orders: 56, topProduct: "Respect Bundle" },
@@ -54,6 +56,7 @@ const GROUP_BAR_COLORS = [
   "#155e75",
   "#6b7280",
   "#9ca3af",
+  "#4d7c0f",
 ];
 
 const chartConfig = {
@@ -103,11 +106,24 @@ const INITIAL_PROXY_QUEUE = [
 
 export default function AdminDashboardPage() {
   const [proxyQueue, setProxyQueue] = useState(INITIAL_PROXY_QUEUE);
+  const [completingProxyIds, setCompletingProxyIds] = useState<Record<string, boolean>>({});
 
   const updateProxyStatus = (id: string, newStatus: "pending" | "in-progress" | "completed") => {
     setProxyQueue((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)),
     );
+  };
+
+  const completeProxyRequest = (id: string) => {
+    setCompletingProxyIds((prev) => ({ ...prev, [id]: true }));
+    window.setTimeout(() => {
+      updateProxyStatus(id, "completed");
+      setCompletingProxyIds((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }, 1800);
   };
 
   const statusColors = {
@@ -131,7 +147,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -207,7 +222,6 @@ export default function AdminDashboardPage() {
           </motion.div>
         </motion.div>
 
-        {/* Proxy Service Queue */}
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="mb-10">
           <Card>
             <CardHeader>
@@ -236,8 +250,8 @@ export default function AdminDashboardPage() {
                         </Badge>
                       </div>
                       <p className="text-xs text-text-main/60">
-                        <strong>{request.customer}</strong> → {request.ancestor} · {request.bundle}{" "}
-                        ·{" "}
+                        <strong>{request.customer}</strong> -&gt; {request.ancestor} -{" "}
+                        {request.bundle} -{" "}
                         {new Date(request.date).toLocaleDateString("en-SG", {
                           day: "numeric",
                           month: "short",
@@ -256,14 +270,28 @@ export default function AdminDashboardPage() {
                         </Button>
                       )}
                       {request.status === "in-progress" && (
-                        <Button
-                          size="sm"
-                          className="text-xs gap-1"
-                          onClick={() => updateProxyStatus(request.id, "completed")}
-                        >
-                          <Video className="size-3" />
-                          Mark Complete
-                        </Button>
+                        <>
+                          {!completingProxyIds[request.id] ? (
+                            <Button
+                              size="sm"
+                              className="text-xs gap-1"
+                              onClick={() => completeProxyRequest(request.id)}
+                            >
+                              <Video className="size-3" />
+                              Mark as Complete
+                            </Button>
+                          ) : (
+                            <div className="rounded-lg border border-green-200 bg-green-50 p-2 min-w-[210px]">
+                              <div className="h-10 rounded bg-black/90 text-white text-[10px] flex items-center justify-center gap-1">
+                                <Video className="size-3 animate-pulse" />
+                                Simulating video playback...
+                              </div>
+                              <div className="mt-2 text-[10px] text-green-700 font-bold">
+                                Finalizing completion...
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                       {request.status === "completed" && (
                         <div className="flex items-center gap-1 text-xs text-green-600 font-bold">
@@ -279,7 +307,6 @@ export default function AdminDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Orders Overview */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -311,14 +338,15 @@ export default function AdminDashboardPage() {
                     Expected surge in bundle requests in 14 days based on your customer subscriber
                     base.
                   </p>
-                  <Button size="sm">Review Inventory</Button>
+                  <Button size="sm" asChild>
+                    <Link href="/admin/inventory">Review Inventory</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         </motion.div>
 
-        {/* Simulated Analytics */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -429,8 +457,9 @@ export default function AdminDashboardPage() {
                           <Button
                             size="sm"
                             className="w-full bg-secondary hover:bg-secondary/90 text-white"
+                            asChild
                           >
-                            View Forecast Model
+                            <Link href="/admin/forecast">View Forecast Model</Link>
                           </Button>
                         </div>
                       </div>
@@ -442,7 +471,6 @@ export default function AdminDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Customer Group Analytics */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -457,16 +485,15 @@ export default function AdminDashboardPage() {
                 Customer Group Analytics
               </CardTitle>
               <p className="text-sm text-text-main/60">
-                Revenue and purchasing patterns segmented by dialect group.
+                Revenue and purchasing patterns segmented by customer group.
               </p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="flex flex-col gap-8">
-                {/* Revenue by Group Chart */}
                 <div>
                   <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary" />
-                    Revenue by Dialect Group
+                    Revenue by Customer Group
                   </h4>
                   <div className="h-[240px] w-full">
                     <ChartContainer
@@ -501,11 +528,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                {/* Group Breakdown Table */}
                 <div className="pt-6 border-t border-neutral-main/10">
                   <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-secondary" />
-                    Purchasing Breakdown by Group
+                    Purchasing Breakdown by Customer Group
                   </h4>
                   <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
                     <table className="w-full text-sm">

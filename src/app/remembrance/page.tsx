@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Heart, UserPlus, Bell, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardDescription } from "@/components/ui/card";
@@ -30,30 +30,61 @@ import { useEffect } from "react";
 
 const INITIAL_REMEMBRANCES = UPCOMING_RITUALS.filter((r) => r.type === "personal");
 
+interface RemembranceEntry {
+  id: string;
+  name: string;
+  birthday?: string | null;
+  passingDate?: string | null;
+  date?: string;
+  lunarDate: string;
+  description: string;
+  type: string;
+  isUpcoming: boolean;
+}
+
+interface RemembranceFormState {
+  name: string;
+  relation: string;
+  description: string;
+  birthday: string;
+  passingDate: string;
+  dialect: string;
+}
+
+const INITIAL_FORM_STATE: RemembranceFormState = {
+  name: "",
+  relation: "",
+  description: "",
+  birthday: "",
+  passingDate: "",
+  dialect: "",
+};
+
 export default function RemembrancePage() {
   const { user } = useAuth();
   const isSubscriber = user?.tier === "Subscriber";
 
-  const [remembrances, setRemembrances] = useState<any[]>([]);
+  const [remembrances, setRemembrances] = useState<RemembranceEntry[]>([]);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  // Form State
-  const [name, setName] = useState("");
-  const [relation, setRelation] = useState("");
-  const [description, setDescription] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [passingDate, setPassingDate] = useState("");
-  const [dialect, setDialect] = useState("");
+  const [form, setForm] = useState<RemembranceFormState>(INITIAL_FORM_STATE);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Load from localStorage
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("hinlong_remembrances");
-    if (saved) {
-      setRemembrances(JSON.parse(saved));
-    } else {
-      setRemembrances(INITIAL_REMEMBRANCES);
+    try {
+      const saved = localStorage.getItem("hinlong_remembrances");
+      if (saved) {
+        const parsed = JSON.parse(saved) as RemembranceEntry[];
+        if (Array.isArray(parsed)) {
+          setRemembrances(parsed);
+          return;
+        }
+      }
+      setRemembrances(INITIAL_REMEMBRANCES as unknown as RemembranceEntry[]);
+    } catch {
+      setRemembrances(INITIAL_REMEMBRANCES as unknown as RemembranceEntry[]);
     }
   }, []);
 
@@ -63,31 +94,36 @@ export default function RemembrancePage() {
     return <RemembranceGate />;
   }
 
-  const handleAdd = () => {
-    if (!name || !relation) return;
+  const handleAdd = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!form.name.trim() || !form.relation) {
+      setFormError("Name and relation are required.");
+      return;
+    }
 
     const newEntry = {
       id: `personal-${Date.now()}`,
-      name: `${name} (${relation})`,
-      birthday: birthday || null,
-      passingDate: passingDate || null,
+      name: `${form.name.trim()} (${form.relation})`,
+      birthday: form.birthday || null,
+      passingDate: form.passingDate || null,
       lunarDate: "Lunar details updated periodically",
-      description: description || `${dialect ? `${dialect} tradition.` : "Family tradition."}`,
+      description:
+        form.description.trim() ||
+        `${form.dialect ? `${form.dialect} tradition.` : "Family tradition."}`,
       type: "personal",
       isUpcoming: true,
-    };
+    } satisfies RemembranceEntry;
 
-    const updated = [...remembrances, newEntry];
-    setRemembrances(updated);
-    localStorage.setItem("hinlong_remembrances", JSON.stringify(updated));
+    setRemembrances((prev) => {
+      const updated = [...prev, newEntry];
+      localStorage.setItem("hinlong_remembrances", JSON.stringify(updated));
+      return updated;
+    });
+
+    setFormError(null);
     setOpen(false);
-    // Reset Form
-    setName("");
-    setRelation("");
-    setDescription("");
-    setBirthday("");
-    setPassingDate("");
-    setDialect("");
+    setForm(INITIAL_FORM_STATE);
   };
 
   return (
@@ -128,82 +164,121 @@ export default function RemembrancePage() {
                   remembrance services.
                 </CardDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Name / Ancestor Title</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Grandfather Lim"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="relation">Relation</Label>
-                  <Select value={relation} onValueChange={setRelation}>
-                    <SelectTrigger id="relation">
-                      <SelectValue placeholder="Select Relationship" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Grandfather">Grandfather</SelectItem>
-                      <SelectItem value="Grandmother">Grandmother</SelectItem>
-                      <SelectItem value="Father">Father</SelectItem>
-                      <SelectItem value="Mother">Mother</SelectItem>
-                      <SelectItem value="Uncle">Uncle</SelectItem>
-                      <SelectItem value="Aunt">Aunt</SelectItem>
-                      <SelectItem value="Other">Other Relation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Input
-                    id="description"
-                    placeholder="e.g., Loved gardening and cooking Hokkien recipes"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleAdd}>
+                <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="birthday">Birthday</Label>
+                    <Label htmlFor="name">Name / Ancestor Title</Label>
                     <Input
-                      id="birthday"
-                      type="date"
-                      value={birthday}
-                      onChange={(e) => setBirthday(e.target.value)}
+                      id="name"
+                      placeholder="e.g., Grandfather Lim"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="passingDate">Passing Anniversary</Label>
+                    <Label htmlFor="relation">Relation</Label>
+                    <Select
+                      value={form.relation}
+                      onValueChange={(relation) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          relation,
+                        }))
+                      }
+                    >
+                      <SelectTrigger id="relation">
+                        <SelectValue placeholder="Select Relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Grandfather">Grandfather</SelectItem>
+                        <SelectItem value="Grandmother">Grandmother</SelectItem>
+                        <SelectItem value="Father">Father</SelectItem>
+                        <SelectItem value="Mother">Mother</SelectItem>
+                        <SelectItem value="Uncle">Uncle</SelectItem>
+                        <SelectItem value="Aunt">Aunt</SelectItem>
+                        <SelectItem value="Other">Other Relation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description (Optional)</Label>
                     <Input
-                      id="passingDate"
-                      type="date"
-                      value={passingDate}
-                      onChange={(e) => setPassingDate(e.target.value)}
+                      id="description"
+                      placeholder="e.g., Loved gardening and cooking Hokkien recipes"
+                      value={form.description}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="birthday">Birthday</Label>
+                      <Input
+                        id="birthday"
+                        type="date"
+                        value={form.birthday}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            birthday: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="passingDate">Passing Anniversary</Label>
+                      <Input
+                        id="passingDate"
+                        type="date"
+                        value={form.passingDate}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            passingDate: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="dialect">Dialect Group (Optional)</Label>
+                    <Select
+                      value={form.dialect}
+                      onValueChange={(dialect) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          dialect,
+                        }))
+                      }
+                    >
+                      <SelectTrigger id="dialect">
+                        <SelectValue placeholder="Select Dialect (for ritual guides)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Hokkien">Hokkien</SelectItem>
+                        <SelectItem value="Cantonese">Cantonese</SelectItem>
+                        <SelectItem value="Teochew">Teochew</SelectItem>
+                        <SelectItem value="Hakka">Hakka</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formError && <p className="text-xs font-medium text-red-600">{formError}</p>}
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="dialect">Dialect Group (Optional)</Label>
-                  <Select value={dialect} onValueChange={setDialect}>
-                    <SelectTrigger id="dialect">
-                      <SelectValue placeholder="Select Dialect (for ritual guides)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Hokkien">Hokkien</SelectItem>
-                      <SelectItem value="Cantonese">Cantonese</SelectItem>
-                      <SelectItem value="Teochew">Teochew</SelectItem>
-                      <SelectItem value="Hakka">Hakka</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAdd} className="w-full">
-                  Create Profile
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button type="submit" className="w-full">
+                    Create Profile
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>

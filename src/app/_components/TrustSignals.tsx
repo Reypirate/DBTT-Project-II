@@ -22,8 +22,8 @@ export default function TrustSignals() {
             <MapPin className="w-6 h-6" />
           </div>
           <div>
-            <p className="font-bold text-text-main">Balestier Road</p>
-            <p className="text-sm">Convenient In-Store Pickup</p>
+            <p className="font-bold text-text-main">638 Jurong West Street 61 #01-05</p>
+            <p className="text-sm">In-Store Pickup</p>
           </div>
         </div>
 
