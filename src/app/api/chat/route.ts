@@ -3,8 +3,7 @@ import * as Gemini from "@tanstack/ai-gemini";
 import { chat } from "@tanstack/ai";
 import { z } from "zod";
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-const DEFAULT_MODEL_NAME = DEFAULT_MODEL as Parameters<typeof Gemini.geminiText>[0];
+const DEFAULT_MODEL_NAME = "gemini-3.1-flash-lite-preview";
 const ENABLE_FALLBACK = process.env.AI_ADVISOR_FALLBACK !== "false";
 
 const advisorSchema = z.object({
@@ -81,85 +80,85 @@ function normalizeChatError(error: unknown) {
   };
 }
 
-function buildFallbackAdvice(
-  prompt: string,
-  tier?: string,
-  reason?: string,
-): AdvisorResponse & { fallback: true } {
-  const text = prompt.toLowerCase();
-  const isSubscriber = tier === "Subscriber";
+// function buildFallbackAdvice(
+//   prompt: string,
+//   tier?: string,
+//   reason?: string,
+// ): AdvisorResponse & { fallback: true } {
+//   const text = prompt.toLowerCase();
+//   const isSubscriber = tier === "Subscriber";
 
-  const recommendedBundles: string[] = [];
-  const recommendedProducts: string[] = [];
-  const helpfulTips: string[] = [];
+//   const recommendedBundles: string[] = [];
+//   const recommendedProducts: string[] = [];
+//   const helpfulTips: string[] = [];
 
-  if (text.includes("qingming") || text.includes("tomb")) {
-    recommendedBundles.push("Qingming Essential Kit");
-    recommendedProducts.push("Paper Clothing (Male Set)", "Sandalwood Incense (Box)");
-    helpfulTips.push("Prepare offerings one day early to avoid last-minute substitutions.");
-  } else if (
-    text.includes("hungry ghost") ||
-    text.includes("ghost month") ||
-    text.includes("7th month")
-  ) {
-    recommendedBundles.push("7th Month Hungry Ghost Bundle");
-    recommendedProducts.push("Giant Red Candles (Pair)", "Tea Leaves Offering Pack");
-    helpfulTips.push("Offer before late evening and keep rituals respectful and concise.");
-  } else if (text.includes("new house") || text.includes("moving") || text.includes("blessing")) {
-    recommendedBundles.push("New House Blessing Kit");
-    recommendedProducts.push("Traditional Lamp Oil (1L)", "Sandalwood Incense (Box)");
-    helpfulTips.push("Open windows during blessing to symbolize a smooth energy flow.");
-  } else if (text.includes("cny") || text.includes("lunar new year") || text.includes("wealth")) {
-    recommendedBundles.push("CNY Wealth & Prosperity Set");
-    recommendedProducts.push("Giant Red Candles (Pair)", "Premium Gold Joss Paper (Stack)");
-    helpfulTips.push("Start preparations before reunion day to keep offerings calm and orderly.");
-  } else if (
-    text.includes("passing anniversary") ||
-    text.includes("death anniversary") ||
-    text.includes("passing")
-  ) {
-    recommendedBundles.push("Everyday Deity Offering Set", "Qingming Essential Kit");
-    recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
-    helpfulTips.push(
-      "For remembrance anniversaries, start with a simple home setup; scale to Qingming kits for larger family observances.",
-    );
-  } else if (
-    text.includes("birthday") ||
-    text.includes("anniversary") ||
-    text.includes("ancestor") ||
-    text.includes("remembrance")
-  ) {
-    recommendedBundles.push("Everyday Deity Offering Set");
-    recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
-    helpfulTips.push(
-      "Keep the altar clean, use fresh tea, and state names clearly during dedication.",
-    );
-  } else {
-    recommendedBundles.push("Everyday Deity Offering Set");
-    recommendedProducts.push("Premium Gold Joss Paper (Stack)", "Sandalwood Incense (Box)");
-    helpfulTips.push("Use a consistent offering schedule to maintain ritual continuity.");
-  }
+//   if (text.includes("qingming") || text.includes("tomb")) {
+//     recommendedBundles.push("Qingming Essential Kit");
+//     recommendedProducts.push("Paper Clothing (Male Set)", "Sandalwood Incense (Box)");
+//     helpfulTips.push("Prepare offerings one day early to avoid last-minute substitutions.");
+//   } else if (
+//     text.includes("hungry ghost") ||
+//     text.includes("ghost month") ||
+//     text.includes("7th month")
+//   ) {
+//     recommendedBundles.push("7th Month Hungry Ghost Bundle");
+//     recommendedProducts.push("Giant Red Candles (Pair)", "Tea Leaves Offering Pack");
+//     helpfulTips.push("Offer before late evening and keep rituals respectful and concise.");
+//   } else if (text.includes("new house") || text.includes("moving") || text.includes("blessing")) {
+//     recommendedBundles.push("New House Blessing Kit");
+//     recommendedProducts.push("Traditional Lamp Oil (1L)", "Sandalwood Incense (Box)");
+//     helpfulTips.push("Open windows during blessing to symbolize a smooth energy flow.");
+//   } else if (text.includes("cny") || text.includes("lunar new year") || text.includes("wealth")) {
+//     recommendedBundles.push("CNY Wealth & Prosperity Set");
+//     recommendedProducts.push("Giant Red Candles (Pair)", "Premium Gold Joss Paper (Stack)");
+//     helpfulTips.push("Start preparations before reunion day to keep offerings calm and orderly.");
+//   } else if (
+//     text.includes("passing anniversary") ||
+//     text.includes("death anniversary") ||
+//     text.includes("passing")
+//   ) {
+//     recommendedBundles.push("Everyday Deity Offering Set", "Qingming Essential Kit");
+//     recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
+//     helpfulTips.push(
+//       "For remembrance anniversaries, start with a simple home setup; scale to Qingming kits for larger family observances.",
+//     );
+//   } else if (
+//     text.includes("birthday") ||
+//     text.includes("anniversary") ||
+//     text.includes("ancestor") ||
+//     text.includes("remembrance")
+//   ) {
+//     recommendedBundles.push("Everyday Deity Offering Set");
+//     recommendedProducts.push("Tea Leaves Offering Pack", "Sandalwood Incense (Box)");
+//     helpfulTips.push(
+//       "Keep the altar clean, use fresh tea, and state names clearly during dedication.",
+//     );
+//   } else {
+//     recommendedBundles.push("Everyday Deity Offering Set");
+//     recommendedProducts.push("Premium Gold Joss Paper (Stack)", "Sandalwood Incense (Box)");
+//     helpfulTips.push("Use a consistent offering schedule to maintain ritual continuity.");
+//   }
 
-  if (isSubscriber) {
-    helpfulTips.push(
-      "As a subscriber, you can combine this with Proxy Burning Services in your profile.",
-    );
-  } else {
-    helpfulTips.push("Subscribers can unlock deeper personalization and ritual reminders.");
-  }
+//   if (isSubscriber) {
+//     helpfulTips.push(
+//       "As a subscriber, you can combine this with Proxy Burning Services in your profile.",
+//     );
+//   } else {
+//     helpfulTips.push("Subscribers can unlock deeper personalization and ritual reminders.");
+//   }
 
-  const fallbackPrefix = reason
-    ? `Live AI is temporarily unavailable (${reason}). `
-    : "Live AI is temporarily unavailable. ";
+//   const fallbackPrefix = reason
+//     ? `Live AI is temporarily unavailable (${reason}). `
+//     : "Live AI is temporarily unavailable. ";
 
-  return {
-    message: `${fallbackPrefix}Here is a reliable heritage-based recommendation for your request.`,
-    recommendedBundles: Array.from(new Set(recommendedBundles)),
-    recommendedProducts: Array.from(new Set(recommendedProducts)),
-    helpfulTips: Array.from(new Set(helpfulTips)),
-    fallback: true,
-  };
-}
+//   return {
+//     message: `${fallbackPrefix}Here is a reliable heritage-based recommendation for your request.`,
+//     recommendedBundles: Array.from(new Set(recommendedBundles)),
+//     recommendedProducts: Array.from(new Set(recommendedProducts)),
+//     helpfulTips: Array.from(new Set(helpfulTips)),
+//     fallback: true,
+//   };
+// }
 
 export async function POST(req: Request) {
   let normalizedPrompt = "";
