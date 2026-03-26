@@ -12,6 +12,7 @@ const MOCK_ORDERS = [
   {
     id: "ORD-2026-892",
     customer: "John Tan",
+    customerGroup: "Hokkien",
     status: "pending",
     items: ["Qingming Essential Kit x1"],
     total: 38.0,
@@ -21,6 +22,7 @@ const MOCK_ORDERS = [
   {
     id: "ORD-2026-893",
     customer: "Mary Lim",
+    customerGroup: "Teochew",
     status: "preparing",
     items: ["Everyday Deity Offering Set x2", "Sandalwood Incense x1"],
     total: 45.5,
@@ -30,6 +32,7 @@ const MOCK_ORDERS = [
   {
     id: "ORD-2026-894",
     customer: "David Wong",
+    customerGroup: "Cantonese",
     status: "ready",
     items: ["7th Month Hungry Ghost Bundle x1"],
     total: 45.0,
@@ -39,6 +42,7 @@ const MOCK_ORDERS = [
   {
     id: "ORD-2026-880",
     customer: "Sarah Lee",
+    customerGroup: "Hokkien",
     status: "completed",
     items: ["Qingming Essential Kit x2"],
     total: 76.0,
@@ -46,6 +50,16 @@ const MOCK_ORDERS = [
     time: "Morning",
   },
 ];
+
+const GROUP_COLORS: Record<string, string> = {
+  Hokkien: "bg-red-100 text-red-700 border-red-200",
+  Teochew: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  Cantonese: "bg-amber-100 text-amber-700 border-amber-200",
+  Hakka: "bg-teal-100 text-teal-700 border-teal-200",
+  Hainanese: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  Other: "bg-gray-100 text-gray-700 border-gray-200",
+  None: "bg-gray-100 text-gray-500 border-gray-200",
+};
 
 export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState("all");
@@ -116,6 +130,7 @@ export default function AdminOrdersPage() {
                 <tr className="bg-surface border-b border-neutral-main text-text-main/60 uppercase tracking-wider text-xs">
                   <th className="p-4 font-bold">Order ID</th>
                   <th className="p-4 font-bold">Customer</th>
+                  <th className="p-4 font-bold">Group</th>
                   <th className="p-4 font-bold">Pickup Schedule</th>
                   <th className="p-4 font-bold">Status</th>
                   <th className="p-4 font-bold">Total</th>
@@ -127,6 +142,14 @@ export default function AdminOrdersPage() {
                   <tr key={order.id} className="hover:bg-surface/50 transition-colors">
                     <td className="p-4 font-bold text-primary">{order.id}</td>
                     <td className="p-4 font-medium">{order.customer}</td>
+                    <td className="p-4">
+                      <Badge
+                        variant="secondary"
+                        className={`text-[10px] font-bold border ${GROUP_COLORS[order.customerGroup] || GROUP_COLORS["None"]}`}
+                      >
+                        {order.customerGroup}
+                      </Badge>
+                    </td>
                     <td className="p-4">
                       <div className="flex flex-col">
                         <span className="font-medium flex items-center gap-1">

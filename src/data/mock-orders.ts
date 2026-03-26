@@ -2,6 +2,7 @@ export const MOCK_ORDERS = [
   {
     id: "ORD-2026-892",
     customer: "John Tan",
+    customerGroup: "Hokkien",
     status: "pending",
     items: ["Qingming Essential Kit x1"],
     total: 38.0,
@@ -11,6 +12,7 @@ export const MOCK_ORDERS = [
   {
     id: "ORD-2026-893",
     customer: "Mary Lim",
+    customerGroup: "Teochew",
     status: "preparing",
     items: ["Everyday Deity Offering Set x2", "Sandalwood Incense x1"],
     total: 45.5,
@@ -20,6 +22,7 @@ export const MOCK_ORDERS = [
   {
     id: "ORD-2026-894",
     customer: "David Wong",
+    customerGroup: "Cantonese",
     status: "ready",
     items: ["7th Month Hungry Ghost Bundle x1"],
     total: 45.0,
@@ -29,6 +32,7 @@ export const MOCK_ORDERS = [
   {
     id: "ORD-2026-880",
     customer: "Sarah Lee",
+    customerGroup: "Hokkien",
     status: "completed",
     items: ["Qingming Essential Kit x2"],
     total: 76.0,

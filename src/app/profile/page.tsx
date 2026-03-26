@@ -1,12 +1,20 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { CUSTOMER_GROUPS, type CustomerGroup } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Check,
   Crown,
@@ -18,6 +26,7 @@ import {
   Flame,
   PlayCircle,
   Settings2,
+  Users2,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -32,7 +41,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading, updateTier } = useAuth();
+  const { user, isAuthenticated, isLoading, updateTier, updateCustomerGroup } = useAuth();
   const router = useRouter();
   const [reminderOpen, setReminderOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -165,6 +174,48 @@ export default function ProfilePage() {
 
           {/* Quick Actions / Preferences */}
           <div className="space-y-6">
+            {/* Dialect Group Selector */}
+            <Card className="border-neutral-main border-2 border-secondary/30">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="font-playfair text-xl flex items-center gap-2">
+                    <Users2 className="size-5 text-secondary" />
+                    Dialect Group
+                  </CardTitle>
+                  {user.customerGroup && user.customerGroup !== "None" && (
+                    <Badge className="bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/10">
+                      {user.customerGroup}
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription>
+                  Select your dialect group to help us personalize your experience and product
+                  recommendations.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={user.customerGroup || "None"}
+                  onValueChange={(value: string) => updateCustomerGroup(value as CustomerGroup)}
+                >
+                  <SelectTrigger className="w-full border-neutral-main">
+                    <SelectValue placeholder="Select your dialect group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CUSTOMER_GROUPS.map((group) => (
+                      <SelectItem key={group} value={group}>
+                        {group}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-text-main/50 mt-3 italic">
+                  This helps the shop owner understand customer preferences and tailor seasonal
+                  bundles.
+                </p>
+              </CardContent>
+            </Card>
+
             <Card className="border-neutral-main">
               <CardHeader>
                 <CardTitle className="font-playfair text-xl flex items-center gap-2">

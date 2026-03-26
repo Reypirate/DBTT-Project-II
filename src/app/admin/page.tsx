@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, TrendingUp, Users, ShoppingBag, Flame, Check, Video } from "lucide-react";
+import { Package, TrendingUp, Users, Users2, ShoppingBag, Flame, Check, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis } from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { useState } from "react";
 
 const revenueData = [
@@ -34,6 +34,26 @@ const bundleData = [
   { name: "Qingming", sales: 180, label: "Qingming Spec" },
   { name: "Daily", sales: 145, label: "Daily Dev" },
   { name: "Ghost", sales: 210, label: "Ghost Month" },
+];
+
+const customerGroupRevenueData = [
+  { group: "Hokkien", revenue: 18400, orders: 192, topProduct: "Qingming Essential Kit" },
+  { group: "Teochew", revenue: 12300, orders: 128, topProduct: "Everyday Deity Offering Set" },
+  { group: "Cantonese", revenue: 9800, orders: 98, topProduct: "7th Month Hungry Ghost Bundle" },
+  { group: "Hakka", revenue: 5600, orders: 56, topProduct: "Respect Bundle" },
+  { group: "Hainanese", revenue: 3200, orders: 34, topProduct: "Sandalwood Incense" },
+  { group: "Other", revenue: 2100, orders: 22, topProduct: "Qingming Essential Kit" },
+  { group: "None", revenue: 1800, orders: 20, topProduct: "Daily Devotion Set" },
+];
+
+const GROUP_BAR_COLORS = [
+  "#991b1b",
+  "#3730a3",
+  "#92400e",
+  "#115e59",
+  "#155e75",
+  "#6b7280",
+  "#9ca3af",
 ];
 
 const chartConfig = {
@@ -415,6 +435,103 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Customer Group Analytics */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="mt-8"
+        >
+          <Card className="p-6">
+            <CardHeader className="p-0 mb-6">
+              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                <Users2 className="size-5 text-primary" />
+                Customer Group Analytics
+              </CardTitle>
+              <p className="text-sm text-text-main/60">
+                Revenue and purchasing patterns segmented by dialect group.
+              </p>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-8">
+                {/* Revenue by Group Chart */}
+                <div>
+                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    Revenue by Dialect Group
+                  </h4>
+                  <div className="h-[240px] w-full">
+                    <ChartContainer
+                      config={{ revenue: { label: "Revenue ($)", color: "#8b1e2d" } }}
+                      className="aspect-none h-full w-full"
+                    >
+                      <BarChart
+                        data={customerGroupRevenueData}
+                        layout="vertical"
+                        margin={{ left: 10, right: 20, top: 0, bottom: 0 }}
+                      >
+                        <XAxis type="number" hide />
+                        <YAxis
+                          dataKey="group"
+                          type="category"
+                          tickLine={false}
+                          axisLine={false}
+                          className="text-[11px] text-text-main/60"
+                          width={80}
+                        />
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                        <Bar dataKey="revenue" radius={[0, 6, 6, 0]} barSize={22}>
+                          {customerGroupRevenueData.map((_, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ChartContainer>
+                  </div>
+                </div>
+
+                {/* Group Breakdown Table */}
+                <div className="pt-6 border-t border-neutral-main/10">
+                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-secondary" />
+                    Purchasing Breakdown by Group
+                  </h4>
+                  <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-surface text-text-main/60 text-xs uppercase tracking-wider">
+                          <th className="p-3 text-left font-bold">Group</th>
+                          <th className="p-3 text-left font-bold">Top Product</th>
+                          <th className="p-3 text-right font-bold">Orders</th>
+                          <th className="p-3 text-right font-bold">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-main/10">
+                        {customerGroupRevenueData.map((item) => (
+                          <tr key={item.group} className="hover:bg-surface/50 transition-colors">
+                            <td className="p-3 font-bold text-text-main">{item.group}</td>
+                            <td className="p-3 text-text-main/70">{item.topProduct}</td>
+                            <td className="p-3 text-right font-medium text-text-main">
+                              {item.orders}
+                            </td>
+                            <td className="p-3 text-right font-bold text-primary">
+                              ${item.revenue.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>

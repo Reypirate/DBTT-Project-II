@@ -51,13 +51,15 @@ export async function POST(req: Request) {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
-      console.error(
-        "AI Advisor: No API Key found in process.env (checked GEMINI_API_KEY, GOOGLE_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY).",
-      );
+      // Diagnostic check for ALL visible keys, masked for safety
+      const allKeys = Object.keys(process.env);
+      console.error("AI Advisor: Key missing. All process.env keys:", allKeys);
+
       return NextResponse.json(
         {
           error: "GEMINI_API_KEY is missing in your .env",
-          hint: "Please ensure you have GEMINI_API_KEY=AIza... in your .env file and have FULLY RESTARTED your dev server (Ctrl+C and pnpm run dev).",
+          hint: `Server sees these keys: [${allKeys.join(", ")}]. Check if you have a typo like GEMINI_API_KEY_... or if the file is correctly named .env at the root.`,
+          visibleKeys: allKeys,
         },
         { status: 500 },
       );

@@ -2,12 +2,32 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+export type CustomerGroup =
+  | "Hokkien"
+  | "Teochew"
+  | "Cantonese"
+  | "Hakka"
+  | "Hainanese"
+  | "Other"
+  | "None";
+
+export const CUSTOMER_GROUPS: CustomerGroup[] = [
+  "Hokkien",
+  "Teochew",
+  "Cantonese",
+  "Hakka",
+  "Hainanese",
+  "Other",
+  "None",
+];
+
 interface User {
   id: string;
   name: string;
   email: string;
   role: "customer" | "admin";
   tier?: "Free" | "Subscriber";
+  customerGroup?: CustomerGroup;
 }
 
 interface AuthContextType {
@@ -18,6 +38,7 @@ interface AuthContextType {
   logout: () => void;
   login: (email: string, password?: string) => { success: boolean; message?: string };
   updateTier: (tier: "Free" | "Subscriber") => void;
+  updateCustomerGroup: (group: CustomerGroup) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,6 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: "rey@gmail.com",
         role: "customer",
         tier: "Free", // Default tier for customer
+        customerGroup: "None", // Default customer group
       };
     } else {
       return { success: false, message: "User not found. Try rey@gmail.com or admin@gmail.com." };
@@ -88,6 +110,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateCustomerGroup = (group: CustomerGroup) => {
+    if (user && user.role === "customer") {
+      const updatedUser = { ...user, customerGroup: group };
+      setUser(updatedUser);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,6 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         login,
         updateTier,
+        updateCustomerGroup,
       }}
     >
       {children}
