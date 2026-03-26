@@ -1,67 +1,272 @@
 "use client";
 
-import { Package, TrendingUp, Users, Users2, ShoppingBag, Flame, Check, Video } from "lucide-react";
+import {
+  Package,
+  TrendingUp,
+  Users,
+  Users2,
+  ShoppingBag,
+  Flame,
+  Video,
+  Play,
+  Pause,
+  RotateCcw,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
-import { useState } from "react";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie } from "recharts";
+import { useMemo, useState } from "react";
 
-const revenueData = [
-  { month: "Jan", revenue: 4200, orders: 45 },
-  { month: "Feb", revenue: 5800, orders: 52 },
-  { month: "Mar", revenue: 3500, orders: 38 },
-  { month: "Apr", revenue: 8900, orders: 94 },
-  { month: "May", revenue: 4100, orders: 42 },
-  { month: "Jun", revenue: 4300, orders: 44 },
-  { month: "Jul", revenue: 4700, orders: 48 },
-  { month: "Aug", revenue: 9200, orders: 98 },
-  { month: "Sep", revenue: 5100, orders: 55 },
-  { month: "Oct", revenue: 4400, orders: 40 },
-  { month: "Nov", revenue: 4200, orders: 41 },
-  { month: "Dec", revenue: 5500, orders: 60 },
+type ProxyStatus = "pending" | "in-progress" | "completed";
+
+interface ProxyVideoProof {
+  id: string;
+  completedAt: string;
+  durationSeconds: number;
+  proofNote: string;
+}
+
+interface ProxyQueueItem {
+  id: string;
+  customer: string;
+  ancestor: string;
+  date: string;
+  bundle: string;
+  status: ProxyStatus;
+  videoProof: ProxyVideoProof;
+}
+
+interface AnnualRevenuePoint {
+  month: string;
+  revenue: number;
+  orders: number;
+  festivalPeak: string | null;
+}
+
+interface BundlePerformanceMetric {
+  bundle: string;
+  revenue: number;
+  sales: number;
+  views: number;
+  orders: number;
+  conversionRate: number;
+}
+
+interface CustomerGroupMetric {
+  group: string;
+  revenue: number;
+  orders: number;
+  retentionRate: number;
+  avgOrderValue: number;
+  topProduct: string;
+}
+
+interface PeakSeasonForecast {
+  season: string;
+  focusItem: string;
+  demandLiftPercent: number;
+  daysUntil: number;
+  confidencePercent: number;
+}
+
+const THEME_COLORS = {
+  primary: "var(--color-primary, #8b1e2d)",
+  secondary: "var(--color-secondary, #b8921d)",
+  chart1: "var(--color-chart-1, #4f46e5)",
+  chart2: "var(--color-chart-2, #0f766e)",
+  chart3: "var(--color-chart-3, #92400e)",
+  chart4: "var(--color-chart-4, #1d4ed8)",
+  chart5: "var(--color-chart-5, #6b7280)",
+} as const;
+
+const revenueData: AnnualRevenuePoint[] = [
+  { month: "Jan", revenue: 4200, orders: 45, festivalPeak: null },
+  { month: "Feb", revenue: 5800, orders: 52, festivalPeak: "CNY" },
+  { month: "Mar", revenue: 3500, orders: 38, festivalPeak: null },
+  { month: "Apr", revenue: 8900, orders: 94, festivalPeak: "Qingming" },
+  { month: "May", revenue: 4100, orders: 42, festivalPeak: null },
+  { month: "Jun", revenue: 4300, orders: 44, festivalPeak: null },
+  { month: "Jul", revenue: 4700, orders: 48, festivalPeak: null },
+  { month: "Aug", revenue: 9200, orders: 98, festivalPeak: "Ghost Month" },
+  { month: "Sep", revenue: 5100, orders: 55, festivalPeak: null },
+  { month: "Oct", revenue: 4400, orders: 40, festivalPeak: null },
+  { month: "Nov", revenue: 4200, orders: 41, festivalPeak: null },
+  { month: "Dec", revenue: 5500, orders: 60, festivalPeak: "Winter Prayers" },
 ];
 
-const bundleData = [
-  { name: "Respect", sales: 240, label: "Respect Bundle" },
-  { name: "Qingming", sales: 180, label: "Qingming Spec" },
-  { name: "Daily", sales: 145, label: "Daily Dev" },
-  { name: "Ghost", sales: 210, label: "Ghost Month" },
+const bundlePerformanceData: BundlePerformanceMetric[] = [
+  {
+    bundle: "Qingming Essential Kit",
+    revenue: 18400,
+    sales: 240,
+    views: 1840,
+    orders: 240,
+    conversionRate: 13.04,
+  },
+  {
+    bundle: "7th Month Hungry Ghost Bundle",
+    revenue: 14600,
+    sales: 210,
+    views: 1650,
+    orders: 210,
+    conversionRate: 12.73,
+  },
+  {
+    bundle: "Everyday Deity Offering Set",
+    revenue: 12300,
+    sales: 180,
+    views: 1580,
+    orders: 180,
+    conversionRate: 11.39,
+  },
+  {
+    bundle: "Respect Bundle",
+    revenue: 9800,
+    sales: 145,
+    views: 1290,
+    orders: 145,
+    conversionRate: 11.24,
+  },
+  {
+    bundle: "CNY Wealth & Prosperity Set",
+    revenue: 8600,
+    sales: 118,
+    views: 970,
+    orders: 118,
+    conversionRate: 12.16,
+  },
 ];
 
-const customerGroupRevenueData = [
-  { group: "Hokkien", revenue: 18400, orders: 192, topProduct: "Qingming Essential Kit" },
-  { group: "Taoist", revenue: 14600, orders: 141, topProduct: "Everyday Deity Offering Set" },
-  { group: "Teochew", revenue: 12300, orders: 128, topProduct: "Everyday Deity Offering Set" },
-  { group: "Cantonese", revenue: 9800, orders: 98, topProduct: "7th Month Hungry Ghost Bundle" },
-  { group: "Hakka", revenue: 5600, orders: 56, topProduct: "Respect Bundle" },
-  { group: "Hainanese", revenue: 3200, orders: 34, topProduct: "Sandalwood Incense" },
-  { group: "Other", revenue: 2100, orders: 22, topProduct: "Qingming Essential Kit" },
-  { group: "None", revenue: 1800, orders: 20, topProduct: "Daily Devotion Set" },
+const topBundleSalesData = bundlePerformanceData
+  .map((bundle) => ({ sales: bundle.sales, label: bundle.bundle.replace(" Bundle", "") }))
+  .sort((a, b) => b.sales - a.sales);
+
+const revenuePerBundleData = bundlePerformanceData.map((bundle) => ({
+  bundle: bundle.bundle.replace(" Bundle", ""),
+  revenue: bundle.revenue,
+}));
+
+const customerGroupRevenueData: CustomerGroupMetric[] = [
+  {
+    group: "Hokkien",
+    revenue: 18400,
+    orders: 192,
+    retentionRate: 71,
+    avgOrderValue: 95.83,
+    topProduct: "Qingming Essential Kit",
+  },
+  {
+    group: "Taoist",
+    revenue: 14600,
+    orders: 141,
+    retentionRate: 68,
+    avgOrderValue: 103.55,
+    topProduct: "Everyday Deity Offering Set",
+  },
+  {
+    group: "Teochew",
+    revenue: 12300,
+    orders: 128,
+    retentionRate: 64,
+    avgOrderValue: 96.09,
+    topProduct: "Everyday Deity Offering Set",
+  },
+  {
+    group: "Cantonese",
+    revenue: 9800,
+    orders: 98,
+    retentionRate: 58,
+    avgOrderValue: 100,
+    topProduct: "7th Month Hungry Ghost Bundle",
+  },
+  {
+    group: "Hakka",
+    revenue: 5600,
+    orders: 56,
+    retentionRate: 52,
+    avgOrderValue: 100,
+    topProduct: "Respect Bundle",
+  },
+  {
+    group: "Hainanese",
+    revenue: 3200,
+    orders: 34,
+    retentionRate: 44,
+    avgOrderValue: 94.12,
+    topProduct: "Sandalwood Incense",
+  },
+  {
+    group: "Other",
+    revenue: 2100,
+    orders: 22,
+    retentionRate: 39,
+    avgOrderValue: 95.45,
+    topProduct: "Qingming Essential Kit",
+  },
+  {
+    group: "None",
+    revenue: 1800,
+    orders: 20,
+    retentionRate: 28,
+    avgOrderValue: 90,
+    topProduct: "Daily Devotion Set",
+  },
+];
+
+const peakSeasonForecastData: PeakSeasonForecast[] = [
+  {
+    season: "Qingming Cycle",
+    focusItem: "Qingming Essential Kit",
+    demandLiftPercent: 120,
+    daysUntil: 14,
+    confidencePercent: 89,
+  },
+  {
+    season: "Hungry Ghost Cycle",
+    focusItem: "7th Month Hungry Ghost Bundle",
+    demandLiftPercent: 105,
+    daysUntil: 41,
+    confidencePercent: 84,
+  },
+  {
+    season: "Lunar Year-End",
+    focusItem: "CNY Wealth & Prosperity Set",
+    demandLiftPercent: 72,
+    daysUntil: 92,
+    confidencePercent: 76,
+  },
 ];
 
 const GROUP_BAR_COLORS = [
-  "#991b1b",
-  "#3730a3",
-  "#92400e",
-  "#115e59",
-  "#155e75",
-  "#6b7280",
-  "#9ca3af",
-  "#4d7c0f",
+  THEME_COLORS.primary,
+  THEME_COLORS.secondary,
+  THEME_COLORS.chart1,
+  THEME_COLORS.chart2,
+  THEME_COLORS.chart3,
+  THEME_COLORS.chart4,
+  THEME_COLORS.chart5,
+  "var(--color-muted-foreground, #9ca3af)",
 ];
 
 const chartConfig = {
-  revenue: { label: "Revenue ($)", color: "#8b1e2d" },
-  orders: { label: "Orders Count", color: "#b8921d" },
+  revenue: { label: "Revenue ($)", color: THEME_COLORS.primary },
+  orders: { label: "Orders Count", color: THEME_COLORS.secondary },
 } satisfies ChartConfig;
 
 const containerVariants = {
@@ -77,14 +282,20 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 } as const;
 
-const INITIAL_PROXY_QUEUE = [
+const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
   {
     id: "PXY-001",
     customer: "Rey",
     ancestor: "Grandfather Lim",
     date: "2026-04-05",
     bundle: "Qingming Essential Kit",
-    status: "pending" as const,
+    status: "pending",
+    videoProof: {
+      id: "VID-PXY-001",
+      completedAt: "2026-04-05T10:15:00.000Z",
+      durationSeconds: 94,
+      proofNote: "Incense and joss sequence confirmed on altar table.",
+    },
   },
   {
     id: "PXY-002",
@@ -92,7 +303,13 @@ const INITIAL_PROXY_QUEUE = [
     ancestor: "Grandmother Wong",
     date: "2026-04-12",
     bundle: "Everyday Deity Offering Set",
-    status: "in-progress" as const,
+    status: "in-progress",
+    videoProof: {
+      id: "VID-PXY-002",
+      completedAt: "2026-04-12T14:40:00.000Z",
+      durationSeconds: 88,
+      proofNote: "Fulfillment recording queued after offering completion.",
+    },
   },
   {
     id: "PXY-003",
@@ -100,15 +317,46 @@ const INITIAL_PROXY_QUEUE = [
     ancestor: "Father Lee",
     date: "2026-03-28",
     bundle: "7th Month Hungry Ghost Bundle",
-    status: "completed" as const,
+    status: "completed",
+    videoProof: {
+      id: "VID-PXY-003",
+      completedAt: "2026-03-28T18:05:00.000Z",
+      durationSeconds: 112,
+      proofNote: "Full burn sequence and completion bow captured end-to-end.",
+    },
   },
 ];
 
 export default function AdminDashboardPage() {
-  const [proxyQueue, setProxyQueue] = useState(INITIAL_PROXY_QUEUE);
+  const [proxyQueue, setProxyQueue] = useState<ProxyQueueItem[]>(INITIAL_PROXY_QUEUE);
   const [completingProxyIds, setCompletingProxyIds] = useState<Record<string, boolean>>({});
+  const [videoReviewOpen, setVideoReviewOpen] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [reviewingProxy, setReviewingProxy] = useState<ProxyQueueItem | null>(null);
 
-  const updateProxyStatus = (id: string, newStatus: "pending" | "in-progress" | "completed") => {
+  const averageRetentionRate = useMemo(
+    () =>
+      Math.round(
+        customerGroupRevenueData.reduce((sum, group) => sum + group.retentionRate, 0) /
+          customerGroupRevenueData.length,
+      ),
+    [],
+  );
+
+  const topRetentionSegment = useMemo(
+    () =>
+      customerGroupRevenueData.reduce((best, current) =>
+        current.retentionRate > best.retentionRate ? current : best,
+      ),
+    [],
+  );
+
+  const weeklyRevenue = useMemo(
+    () => revenueData.slice(-2).reduce((sum, month) => sum + month.revenue, 0),
+    [],
+  );
+
+  const updateProxyStatus = (id: string, newStatus: ProxyStatus) => {
     setProxyQueue((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)),
     );
@@ -126,7 +374,13 @@ export default function AdminDashboardPage() {
     }, 1800);
   };
 
-  const statusColors = {
+  const openVideoReview = (proxy: ProxyQueueItem) => {
+    setReviewingProxy(proxy);
+    setVideoReviewOpen(true);
+    setIsVideoPlaying(false);
+  };
+
+  const statusColors: Record<ProxyStatus, string> = {
     pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
     "in-progress": "bg-blue-100 text-blue-700 hover:bg-blue-100",
     completed: "bg-green-100 text-green-700 hover:bg-green-100",
@@ -165,7 +419,9 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-text-main/60 mb-1">Active Preorders</p>
-                <h3 className="font-playfair text-3xl font-bold text-text-main">48</h3>
+                <h3 className="font-playfair text-3xl font-bold text-text-main">
+                  {proxyQueue.filter((item) => item.status !== "completed").length + 39}
+                </h3>
               </div>
             </Card>
           </motion.div>
@@ -182,7 +438,9 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-text-main/60 mb-1">Weekly Revenue</p>
-                <h3 className="font-playfair text-3xl font-bold text-text-main">$3,420</h3>
+                <h3 className="font-playfair text-3xl font-bold text-text-main">
+                  ${weeklyRevenue.toLocaleString()}
+                </h3>
               </div>
             </Card>
           </motion.div>
@@ -198,8 +456,10 @@ export default function AdminDashboardPage() {
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-text-main/60 mb-1">Subscriber Base</p>
-                <h3 className="font-playfair text-3xl font-bold text-text-main">1,204</h3>
+                <p className="text-sm font-medium text-text-main/60 mb-1">Avg Segment Retention</p>
+                <h3 className="font-playfair text-3xl font-bold text-text-main">
+                  {averageRetentionRate}%
+                </h3>
               </div>
             </Card>
           </motion.div>
@@ -211,7 +471,7 @@ export default function AdminDashboardPage() {
                   <Package className="size-6" />
                 </div>
                 <span className="inline-flex text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                  3 items
+                  4 items
                 </span>
               </div>
               <div>
@@ -294,10 +554,15 @@ export default function AdminDashboardPage() {
                         </>
                       )}
                       {request.status === "completed" && (
-                        <div className="flex items-center gap-1 text-xs text-green-600 font-bold">
-                          <Check className="size-3" />
-                          Done
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs gap-1"
+                          onClick={() => openVideoReview(request)}
+                        >
+                          <Video className="size-3.5" />
+                          Review Video
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -379,8 +644,8 @@ export default function AdminDashboardPage() {
                       >
                         <defs>
                           <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b1e2d" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="#8b1e2d" stopOpacity={0.0} />
+                            <stop offset="5%" stopColor={THEME_COLORS.primary} stopOpacity={0.4} />
+                            <stop offset="95%" stopColor={THEME_COLORS.primary} stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
                         <XAxis
@@ -395,7 +660,7 @@ export default function AdminDashboardPage() {
                           dataKey="revenue"
                           type="monotone"
                           fill="url(#revenueGrad)"
-                          stroke="#8b1e2d"
+                          stroke={THEME_COLORS.primary}
                           strokeWidth={2.5}
                         />
                       </AreaChart>
@@ -411,11 +676,11 @@ export default function AdminDashboardPage() {
                     </h4>
                     <div className="h-[180px]">
                       <ChartContainer
-                        config={{ sales: { label: "Total Sales", color: "#b8921d" } }}
+                        config={{ sales: { label: "Total Sales", color: THEME_COLORS.secondary } }}
                         className="aspect-none h-full w-full"
                       >
                         <BarChart
-                          data={bundleData}
+                          data={topBundleSalesData}
                           layout="vertical"
                           margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
                         >
@@ -432,7 +697,12 @@ export default function AdminDashboardPage() {
                             cursor={false}
                             content={<ChartTooltipContent hideLabel />}
                           />
-                          <Bar dataKey="sales" fill="#b8921d" radius={[0, 4, 4, 0]} barSize={20} />
+                          <Bar
+                            dataKey="sales"
+                            fill={THEME_COLORS.secondary}
+                            radius={[0, 4, 4, 0]}
+                            barSize={20}
+                          />
                         </BarChart>
                       </ChartContainer>
                     </div>
@@ -445,14 +715,20 @@ export default function AdminDashboardPage() {
                     </h4>
                     <div className="bg-surface border border-neutral-main/20 rounded-xl p-5 h-full flex flex-col justify-center">
                       <div className="space-y-4">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-text-main/70">Qingming preparations</span>
-                          <span className="font-bold text-secondary">+120% Demand</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-text-main/70">Hungry Ghost Restock</span>
-                          <span className="font-bold text-secondary">High Influx</span>
-                        </div>
+                        {peakSeasonForecastData.map((forecast) => (
+                          <div key={forecast.season} className="space-y-1">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-text-main/70">{forecast.season}</span>
+                              <span className="font-bold text-secondary">
+                                +{forecast.demandLiftPercent}% Demand
+                              </span>
+                            </div>
+                            <div className="text-xs text-text-main/60">
+                              {forecast.focusItem} {forecast.daysUntil} days{" "}
+                              {forecast.confidencePercent}% confidence
+                            </div>
+                          </div>
+                        ))}
                         <div className="pt-3 border-t border-neutral-main/10">
                           <Button
                             size="sm"
@@ -463,6 +739,58 @@ export default function AdminDashboardPage() {
                           </Button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-8 pt-6 border-t border-neutral-main/10">
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      Revenue per Bundle
+                    </h4>
+                    <div className="h-[220px] w-full">
+                      <ChartContainer
+                        config={{ revenue: { label: "Revenue", color: THEME_COLORS.chart1 } }}
+                        className="aspect-none h-full w-full"
+                      >
+                        <BarChart data={revenuePerBundleData} margin={{ left: 0, right: 8 }}>
+                          <XAxis dataKey="bundle" tickLine={false} axisLine={false} interval={0} />
+                          <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `$${value / 1000}k`}
+                          />
+                          <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent hideLabel />}
+                          />
+                          <Bar dataKey="revenue" fill={THEME_COLORS.chart1} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ChartContainer>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <RotateCcw className="size-4 text-secondary" />
+                      Conversion Rate per Bundle
+                    </h4>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {bundlePerformanceData.slice(0, 4).map((bundle) => (
+                        <div
+                          key={bundle.bundle}
+                          className="rounded-xl border border-neutral-main/30 bg-surface p-4"
+                        >
+                          <p className="text-xs text-text-main/60 line-clamp-1">{bundle.bundle}</p>
+                          <p className="text-2xl font-bold text-primary mt-1">
+                            {bundle.conversionRate.toFixed(2)}%
+                          </p>
+                          <div className="flex items-center justify-between mt-2 text-xs text-text-main/60">
+                            <span>{bundle.orders} orders</span>
+                            <span>{bundle.views} views</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -485,11 +813,31 @@ export default function AdminDashboardPage() {
                 Customer Group Analytics
               </CardTitle>
               <p className="text-sm text-text-main/60">
-                Revenue and purchasing patterns segmented by customer group.
+                Revenue, retention, and purchasing patterns segmented by customer group.
               </p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="flex flex-col gap-8">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
+                    <p className="text-xs uppercase tracking-wider text-text-main/60">
+                      Avg Retention Rate
+                    </p>
+                    <p className="text-3xl font-bold text-primary mt-1">{averageRetentionRate}%</p>
+                  </div>
+                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
+                    <p className="text-xs uppercase tracking-wider text-text-main/60">
+                      Top Retained Segment
+                    </p>
+                    <p className="text-3xl font-bold text-primary mt-1">
+                      {topRetentionSegment.group}
+                    </p>
+                    <p className="text-xs text-text-main/60 mt-1">
+                      {topRetentionSegment.retentionRate}% returning customers
+                    </p>
+                  </div>
+                </div>
+
                 <div>
                   <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary" />
@@ -497,25 +845,19 @@ export default function AdminDashboardPage() {
                   </h4>
                   <div className="h-[240px] w-full">
                     <ChartContainer
-                      config={{ revenue: { label: "Revenue ($)", color: "#8b1e2d" } }}
+                      config={{ revenue: { label: "Revenue ($)", color: THEME_COLORS.chart3 } }}
                       className="aspect-none h-full w-full"
                     >
-                      <BarChart
-                        data={customerGroupRevenueData}
-                        layout="vertical"
-                        margin={{ left: 10, right: 20, top: 0, bottom: 0 }}
-                      >
-                        <XAxis type="number" hide />
+                      <BarChart data={customerGroupRevenueData} margin={{ left: 4, right: 20 }}>
+                        <XAxis dataKey="group" tickLine={false} axisLine={false} />
                         <YAxis
-                          dataKey="group"
-                          type="category"
                           tickLine={false}
                           axisLine={false}
                           className="text-[11px] text-text-main/60"
-                          width={80}
+                          tickFormatter={(value) => `$${value / 1000}k`}
                         />
                         <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="revenue" radius={[0, 6, 6, 0]} barSize={22}>
+                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]} barSize={22}>
                           {customerGroupRevenueData.map((_, index) => (
                             <Cell
                               key={`cell-${index}`}
@@ -524,6 +866,40 @@ export default function AdminDashboardPage() {
                           ))}
                         </Bar>
                       </BarChart>
+                    </ChartContainer>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-secondary" />
+                    Revenue Share by Segment
+                  </h4>
+                  <div className="h-[220px] w-full">
+                    <ChartContainer
+                      config={{
+                        revenue: { label: "Revenue Share", color: THEME_COLORS.secondary },
+                      }}
+                      className="aspect-none h-full w-full"
+                    >
+                      <PieChart>
+                        <Pie
+                          data={customerGroupRevenueData}
+                          dataKey="revenue"
+                          nameKey="group"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                        >
+                          {customerGroupRevenueData.map((_, index) => (
+                            <Cell
+                              key={`pie-cell-${index}`}
+                              fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                      </PieChart>
                     </ChartContainer>
                   </div>
                 </div>
@@ -538,8 +914,10 @@ export default function AdminDashboardPage() {
                       <thead>
                         <tr className="bg-surface text-text-main/60 text-xs uppercase tracking-wider">
                           <th className="p-3 text-left font-bold">Group</th>
+                          <th className="p-3 text-right font-bold">Retention</th>
                           <th className="p-3 text-left font-bold">Top Product</th>
                           <th className="p-3 text-right font-bold">Orders</th>
+                          <th className="p-3 text-right font-bold">Avg Order</th>
                           <th className="p-3 text-right font-bold">Revenue</th>
                         </tr>
                       </thead>
@@ -547,9 +925,15 @@ export default function AdminDashboardPage() {
                         {customerGroupRevenueData.map((item) => (
                           <tr key={item.group} className="hover:bg-surface/50 transition-colors">
                             <td className="p-3 font-bold text-text-main">{item.group}</td>
+                            <td className="p-3 text-right font-semibold text-secondary">
+                              {item.retentionRate}%
+                            </td>
                             <td className="p-3 text-text-main/70">{item.topProduct}</td>
                             <td className="p-3 text-right font-medium text-text-main">
                               {item.orders}
+                            </td>
+                            <td className="p-3 text-right font-medium text-text-main">
+                              ${item.avgOrderValue.toFixed(2)}
                             </td>
                             <td className="p-3 text-right font-bold text-primary">
                               ${item.revenue.toLocaleString()}
@@ -564,6 +948,90 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        <Dialog open={videoReviewOpen} onOpenChange={setVideoReviewOpen}>
+          <DialogContent className="sm:max-w-[720px] p-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6">
+              <DialogTitle className="font-playfair text-2xl">
+                Proxy Fulfillment Video Review
+              </DialogTitle>
+            </DialogHeader>
+            {reviewingProxy && (
+              <div className="px-6 pb-6">
+                <div className="rounded-xl overflow-hidden border border-neutral-main/30 bg-black">
+                  <div className="aspect-video w-full bg-gradient-to-br from-neutral-900 to-neutral-700 flex flex-col justify-center items-center text-white relative">
+                    <Video className="size-16 opacity-30 mb-3" />
+                    <p className="text-sm font-medium">
+                      Mock Playback Stream: {reviewingProxy.videoProof.id}
+                    </p>
+                    <p className="text-xs text-white/75 mt-1">{reviewingProxy.bundle}</p>
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
+                      <div
+                        className={`h-full ${
+                          isVideoPlaying
+                            ? "w-2/3 bg-green-400 transition-all duration-1000"
+                            : "w-1/4 bg-white/70 transition-all duration-300"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-neutral-main/30 bg-surface p-4 space-y-2 text-sm">
+                  <p>
+                    <span className="font-semibold">Order:</span> {reviewingProxy.id}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Customer:</span> {reviewingProxy.customer}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Ancestor:</span> {reviewingProxy.ancestor}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Completed:</span>{" "}
+                    {new Date(reviewingProxy.videoProof.completedAt).toLocaleString("en-SG")}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Duration:</span>{" "}
+                    {reviewingProxy.videoProof.durationSeconds}s
+                  </p>
+                  <p>
+                    <span className="font-semibold">Proof Note:</span>{" "}
+                    {reviewingProxy.videoProof.proofNote}
+                  </p>
+                </div>
+
+                <DialogFooter className="mt-5">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setIsVideoPlaying((prev) => !prev)}
+                  >
+                    {isVideoPlaying ? (
+                      <>
+                        <Pause className="size-4" />
+                        Pause Review
+                      </>
+                    ) : (
+                      <>
+                        <Play className="size-4" />
+                        Play Review
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setVideoReviewOpen(false);
+                      setIsVideoPlaying(false);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

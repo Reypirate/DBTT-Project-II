@@ -33,6 +33,19 @@ interface InventoryFormState {
   threshold: string;
 }
 
+interface DemandPrediction {
+  itemId: string;
+  itemName: string;
+  demandLiftPercent: number;
+  horizonDays: number;
+  confidencePercent: number;
+}
+
+interface StockoutFrequencyRecord {
+  itemId: string;
+  stockoutEventsLast90d: number;
+}
+
 const INVENTORY_STORAGE_KEY = "hinlong_owner_inventory";
 
 const DEFAULT_INVENTORY: InventoryItem[] = [
@@ -86,6 +99,38 @@ const EMPTY_FORM: InventoryFormState = {
   threshold: "",
 };
 
+const INVENTORY_DEMAND_FORECASTS: DemandPrediction[] = [
+  {
+    itemId: "INV-001",
+    itemName: "Premium Gold Joss Paper",
+    demandLiftPercent: 118,
+    horizonDays: 14,
+    confidencePercent: 88,
+  },
+  {
+    itemId: "INV-002",
+    itemName: "Sandalwood Incense (Box)",
+    demandLiftPercent: 46,
+    horizonDays: 21,
+    confidencePercent: 79,
+  },
+  {
+    itemId: "INV-003",
+    itemName: "Red Altar Candles (Pair)",
+    demandLiftPercent: 52,
+    horizonDays: 17,
+    confidencePercent: 81,
+  },
+];
+
+const STOCKOUT_FREQUENCY_HISTORY: StockoutFrequencyRecord[] = [
+  { itemId: "INV-001", stockoutEventsLast90d: 1 },
+  { itemId: "INV-002", stockoutEventsLast90d: 6 },
+  { itemId: "INV-003", stockoutEventsLast90d: 8 },
+  { itemId: "INV-004", stockoutEventsLast90d: 2 },
+  { itemId: "INV-005", stockoutEventsLast90d: 5 },
+];
+
 function safeReadInventory() {
   try {
     const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
@@ -131,6 +176,39 @@ export default function AdminInventoryPage() {
     () => items.filter((item) => item.stock <= item.threshold).length,
     [items],
   );
+
+  const totalInventoryInStock = useMemo(
+    () => items.reduce((sum, item) => sum + item.stock, 0),
+    [items],
+  );
+
+  const topDemandPrediction = useMemo(
+    () =>
+      INVENTORY_DEMAND_FORECASTS.reduce((peak, current) =>
+        current.demandLiftPercent > peak.demandLiftPercent ? current : peak,
+      ),
+    [],
+  );
+
+  const highestStockoutItem = useMemo(() => {
+    const stockoutById = new Map(
+      STOCKOUT_FREQUENCY_HISTORY.map((entry) => [entry.itemId, entry.stockoutEventsLast90d]),
+    );
+    const rankedItems = items
+      .map((item) => ({
+        itemId: item.id,
+        itemName: item.name,
+        stockoutEventsLast90d: stockoutById.get(item.id) ?? 0,
+      }))
+      .sort((a, b) => b.stockoutEventsLast90d - a.stockoutEventsLast90d);
+    return (
+      rankedItems[0] ?? {
+        itemId: "N/A",
+        itemName: "No tracked items",
+        stockoutEventsLast90d: 0,
+      }
+    );
+  }, [items]);
 
   const handleAddItem = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -298,6 +376,42 @@ export default function AdminInventoryPage() {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          <Card className="border border-neutral-main p-5">
+            <p className="text-xs uppercase tracking-wider text-text-main/60">
+              Total Inventory in Stock
+            </p>
+            <p className="text-3xl font-playfair font-bold text-primary mt-2">
+              {totalInventoryInStock.toLocaleString()}
+            </p>
+            <p className="text-xs text-text-main/60 mt-2">
+              Aggregate units across all active SKUs.
+            </p>
+          </Card>
+
+          <Card className="border border-neutral-main p-5">
+            <p className="text-xs uppercase tracking-wider text-text-main/60">
+              Inventory Demand Prediction
+            </p>
+            <p className="text-lg font-bold text-secondary mt-2">
+              High demand expected for {topDemandPrediction.itemName}
+            </p>
+            <p className="text-xs text-text-main/60 mt-2">
+              +{topDemandPrediction.demandLiftPercent}% forecast in{" "}
+              {topDemandPrediction.horizonDays} days {topDemandPrediction.confidencePercent}%
+              confidence.
+            </p>
+          </Card>
+
+          <Card className="border border-neutral-main p-5">
+            <p className="text-xs uppercase tracking-wider text-text-main/60">Stockout Frequency</p>
+            <p className="text-lg font-bold text-primary mt-2">{highestStockoutItem.itemName}</p>
+            <p className="text-xs text-text-main/60 mt-2">
+              {highestStockoutItem.stockoutEventsLast90d} stockout events in the last 90 days.
+            </p>
+          </Card>
         </div>
 
         <Card className="border border-neutral-main rounded-2xl shadow-sm overflow-hidden text-sm">
