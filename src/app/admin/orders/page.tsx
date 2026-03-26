@@ -102,7 +102,7 @@ export default function AdminOrdersPage() {
               Orders Management
             </h1>
             <p className="text-text-main/70">
-              Track preorders, manage fulfillment, and view pickup schedules.
+              Track orders, manage fulfillment, and view delivery schedules.
             </p>
           </div>
           <div className="flex gap-4">
@@ -144,7 +144,7 @@ export default function AdminOrdersPage() {
                   <th className="p-4 font-bold">Order ID</th>
                   <th className="p-4 font-bold">Customer</th>
                   <th className="p-4 font-bold">Group</th>
-                  <th className="p-4 font-bold">Pickup Schedule</th>
+                  <th className="p-4 font-bold">Delivery Schedule</th>
                   <th className="p-4 font-bold">Status</th>
                   <th className="p-4 font-bold">Total</th>
                   <th className="p-4 font-bold text-right">Action</th>

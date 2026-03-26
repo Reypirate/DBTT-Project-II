@@ -21,9 +21,9 @@ export default function HowItWorks() {
     },
     {
       icon: ShoppingBag,
-      title: "3. Preorder & Pickup",
+      title: "3. Order & Delivery",
       description:
-        "Skip the retail queues. Secure your items online and swing by our Hin Long store for a quick, hassle-free pickup.",
+        "Skip the retail queues. Secure your items online and get them delivered to your doorstep.",
       color: "bg-primary",
       shadow: "shadow-primary/20",
     },

@@ -393,7 +393,7 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-text-main/70 mb-4 italic">
-                  Review your past preorders and proxy burning service video recordings.
+                  Review your past orders and proxy burning service video recordings.
                 </p>
                 <Dialog open={orderLogOpen} onOpenChange={setOrderLogOpen}>
                   <DialogTrigger asChild>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
                     <DialogHeader>
                       <DialogTitle className="font-playfair text-2xl">Order Log</DialogTitle>
                       <CardDescription>
-                        Historical preorders and their latest fulfillment statuses.
+                        Historical orders and their latest fulfillment statuses.
                       </CardDescription>
                     </DialogHeader>
                     <div className="max-h-[400px] overflow-auto pr-1 space-y-3 py-2">

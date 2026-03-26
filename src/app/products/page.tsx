@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, ShoppingBag } from "lucide-react";
-import { PRODUCTS } from "@/data/products";
+import { Filter, Minus, Plus, ShoppingBag } from "lucide-react";
+import { PRODUCTS, Product } from "@/data/products";
+import { usePreorder } from "@/context/PreorderContext";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,9 +89,12 @@ export default function ProductsPage() {
                   {product.description}
                 </p>
 
-                <Button variant="outline" className="w-full gap-2 mt-auto">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 mt-auto group-hover:bg-primary group-hover:text-white transition-all duration-300"
+                >
                   <ShoppingBag className="size-4" />
-                  Add to Preorder
+                  View Details & Preorder
                 </Button>
               </CardContent>
             </Card>

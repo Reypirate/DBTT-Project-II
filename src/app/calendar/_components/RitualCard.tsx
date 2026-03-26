@@ -76,7 +76,7 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
           <div className="mt-6 flex flex-wrap gap-4 items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-text-main/60 bg-surface px-3 py-1.5 rounded-lg border border-neutral-main">
               <Info className="size-4" />
-              We recommend preordering 7 days in advance.
+              We recommend ordering 7 days in advance.
             </div>
 
             {isSubscriber ? (

@@ -23,6 +23,11 @@ export interface OrderLogEntry {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  address?: {
+    street: string;
+    unit: string;
+    postalCode: string;
+  };
 }
 
 interface AddToPreorderPayload {
@@ -41,7 +46,10 @@ interface PreorderContextType {
   updateQuantity: (id: string, quantity: number) => void;
   removeFromPreorder: (id: string) => void;
   clearPreorder: () => void;
-  placeOrder: (deliveryFee: number) => OrderLogEntry | null;
+  placeOrder: (
+    deliveryFee: number,
+    address?: { street: string; unit: string; postalCode: string },
+  ) => OrderLogEntry | null;
 }
 
 const PREORDER_STORAGE_KEY = "hinlong_preorder_items";
@@ -128,7 +136,10 @@ export function PreorderProvider({ children }: { children: React.ReactNode }) {
     setPreorderItems([]);
   };
 
-  const placeOrder = (deliveryFee: number) => {
+  const placeOrder = (
+    deliveryFee: number,
+    address?: { street: string; unit: string; postalCode: string },
+  ) => {
     if (preorderItems.length === 0) return null;
 
     const subtotalAmount = preorderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -141,6 +152,7 @@ export function PreorderProvider({ children }: { children: React.ReactNode }) {
       subtotal: subtotalAmount,
       deliveryFee: safeDeliveryFee,
       total: subtotalAmount + safeDeliveryFee,
+      address,
     };
 
     setOrderLog((prev) => [order, ...prev]);

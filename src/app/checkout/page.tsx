@@ -20,6 +20,9 @@ import {
   Plus,
   ShoppingCart,
   Trash2,
+  MapPin,
+  Truck,
+  ArrowRight,
 } from "lucide-react";
 
 const SUBSCRIPTION_PRICE = 12.9;
@@ -36,11 +39,25 @@ export default function CheckoutPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
 
+  // Delivery Address State
+  const [address, setAddress] = useState({
+    street: "Blk 123 Clementi Ave 3",
+    unit: "#04-05",
+    postalCode: "120123",
+  });
+
+  // Subscription Upsell State
+  const [addSubscription, setAddSubscription] = useState(false);
+
   const mode = searchParams.get("mode") === "subscription" ? "subscription" : "preorder";
   const subscriptionGst = Number((SUBSCRIPTION_PRICE * SUBSCRIPTION_GST_RATE).toFixed(2));
   const subscriptionTotal = Number((SUBSCRIPTION_PRICE + subscriptionGst).toFixed(2));
+
   const preorderDeliveryFee = preorderItems.length > 0 ? PREORDER_DELIVERY_FEE : 0;
-  const preorderTotal = Number((subtotal + preorderDeliveryFee).toFixed(2));
+  const preorderSubtotal = subtotal;
+  const effectivePreorderTotal = Number(
+    (preorderSubtotal + preorderDeliveryFee + (addSubscription ? subscriptionTotal : 0)).toFixed(2),
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -72,9 +89,19 @@ export default function CheckoutPage() {
 
   const handlePreorderCheckout = async () => {
     if (preorderItems.length === 0) return;
+    if (!address.street || !address.postalCode) {
+      alert("Please provide a valid delivery address.");
+      return;
+    }
+
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    const order = placeOrder(preorderDeliveryFee);
+
+    if (addSubscription) {
+      updateTier("Subscriber");
+    }
+
+    const order = placeOrder(preorderDeliveryFee, address);
     setPlacedOrderId(order?.id ?? null);
     setIsProcessing(false);
     setIsComplete(true);
@@ -122,7 +149,7 @@ export default function CheckoutPage() {
             <div>
               <h2 className="font-playfair text-3xl font-bold text-text-main mb-2">Order Placed</h2>
               <p className="text-text-main/70">
-                Your preorder has been submitted and is now marked as Pending.
+                Your order has been submitted and is now marked as Pending.
               </p>
               {placedOrderId && (
                 <p className="text-xs text-text-main/50 mt-3 font-medium">
@@ -149,17 +176,63 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
         <div className="text-center mb-12">
           <h1 className="font-playfair text-4xl font-bold text-text-main mb-3">
-            {mode === "subscription" ? "Complete Your Subscription" : "Complete Your Preorder"}
+            {mode === "subscription" ? "Complete Your Subscription" : "Complete Your Order"}
           </h1>
           <p className="text-text-main/70">
             {mode === "subscription"
               ? "Secure simulated checkout for plan activation."
-              : "Review your preordered items and finalize payment details."}
+              : "Review your delivery details and finalize your order."}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-5 gap-8">
-          <div className="md:col-span-3">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 space-y-6">
+            {mode === "preorder" && (
+              <Card className="border-neutral-main shadow-sm">
+                <CardHeader>
+                  <CardTitle className="font-playfair text-xl flex items-center gap-2">
+                    <MapPin className="size-5 text-primary" />
+                    Delivery Address
+                  </CardTitle>
+                  <CardDescription>Enter where you'd like your items delivered</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="street">Street Address</Label>
+                    <Input
+                      id="street"
+                      placeholder="e.g. 123 Jurong West Street 64"
+                      value={address.street}
+                      onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                      className="border-neutral-main"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="unit">Unit Number</Label>
+                      <Input
+                        id="unit"
+                        placeholder="#01-01"
+                        value={address.unit}
+                        onChange={(e) => setAddress({ ...address, unit: e.target.value })}
+                        className="border-neutral-main"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postal">Postal Code</Label>
+                      <Input
+                        id="postal"
+                        placeholder="123456"
+                        value={address.postalCode}
+                        onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+                        className="border-neutral-main"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-neutral-main shadow-sm">
               <CardHeader>
                 <CardTitle className="font-playfair text-xl flex items-center gap-2">
@@ -239,10 +312,10 @@ export default function CheckoutPage() {
                     {isProcessing ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="size-4 animate-spin" />
-                        Submitting Preorder...
+                        Submitting Order...
                       </span>
                     ) : (
-                      `Pay $${preorderTotal.toFixed(2)}`
+                      `Place Order — $${effectivePreorderTotal.toFixed(2)}`
                     )}
                   </Button>
                 )}
@@ -250,7 +323,52 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          <div className="md:col-span-2">
+          <div className="lg:col-span-5 space-y-6">
+            {mode === "preorder" && user?.tier !== "Subscriber" && (
+              <Card className="border-primary/30 bg-primary/[0.03] overflow-hidden">
+                <div className="flex flex-col">
+                  <div className="p-6 flex-grow">
+                    <div className="flex items-center gap-2 mb-2 text-primary font-bold uppercase tracking-wider text-xs">
+                      <Crown className="size-4" />
+                      Priority Recommendation
+                    </div>
+                    <h3 className="font-playfair text-xl font-bold text-text-main mb-2">
+                      Upgrade to Subscriber Tier
+                    </h3>
+                    <p className="text-text-main/70 text-xs mb-4">
+                      Get free delivery, ritual reminders, and priority sourcing.
+                    </p>
+                    <ul className="space-y-2 mb-4">
+                      {[
+                        "Zero delivery fees on all future orders",
+                        "Priority queuing during festive seasons",
+                      ].map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-xs text-text-main/80">
+                          <Check className="size-3 text-green-600" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex items-center justify-between border-t border-primary/10 pt-4 mt-2">
+                      <div>
+                        <p className="text-[10px] text-text-main/60">Only</p>
+                        <p className="text-2xl font-bold text-primary">
+                          ${SUBSCRIPTION_PRICE.toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-text-main/60">per month</p>
+                      </div>
+                      <Button
+                        variant={addSubscription ? "outline" : "default"}
+                        className="font-bold text-sm h-10 px-6"
+                        onClick={() => setAddSubscription(!addSubscription)}
+                      >
+                        {addSubscription ? "Remove Tier" : "Add to Order"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
             {mode === "subscription" ? (
               <Card className="border-primary/20 bg-primary/[0.02] sticky top-24">
                 <CardHeader>
@@ -294,13 +412,13 @@ export default function CheckoutPage() {
                 <CardHeader>
                   <CardTitle className="font-playfair text-lg flex items-center gap-2">
                     <ShoppingCart className="size-5 text-primary" />
-                    Preorder Summary
+                    Order Summary
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {preorderItems.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-neutral-main/50 p-6 text-center">
-                      <p className="text-sm text-text-main/70 mb-4">No items in preorder cart.</p>
+                      <p className="text-sm text-text-main/70 mb-4">No items in your cart.</p>
                       <Button variant="outline" onClick={() => router.push("/bundles")}>
                         Browse Bundles
                       </Button>
@@ -383,13 +501,48 @@ export default function CheckoutPage() {
                           <span>Delivery Fee</span>
                           <span>${preorderDeliveryFee.toFixed(2)}</span>
                         </div>
+                        {addSubscription && (
+                          <div className="flex justify-between text-primary font-medium">
+                            <span className="flex items-center gap-1">
+                              <Crown className="size-3" />
+                              Subscriber Tier
+                            </span>
+                            <span>${subscriptionTotal.toFixed(2)}</span>
+                          </div>
+                        )}
                         <Separator />
-                        <div className="flex justify-between font-bold text-text-main text-base pt-1">
+                        <div className="flex justify-between font-bold text-text-main text-xl pt-1">
                           <span>Total</span>
-                          <span>${preorderTotal.toFixed(2)}</span>
+                          <span>${effectivePreorderTotal.toFixed(2)}</span>
+                        </div>
+                        <div className="pt-2 flex items-center gap-2 text-[10px] text-text-main/40 uppercase tracking-widest font-bold">
+                          <Truck className="size-3" />
+                          Delivery expected within 48 hours
                         </div>
                       </div>
                     </>
+                  )}
+                  {preorderItems.length > 0 && (
+                    <div className="pt-4 mt-4 border-t border-primary/10">
+                      <div className="flex gap-4 items-center mb-4">
+                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Truck className="size-5 text-primary" />
+                        </div>
+                        <div className="text-xs">
+                          <p className="font-bold text-text-main">Standard Delivery Flow</p>
+                          <p className="text-text-main/60">
+                            Items will be packed and dispatched to your provided address.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        className="w-full text-xs gap-1 h-8 text-primary/70 hover:text-primary"
+                        onClick={() => router.push("/products")}
+                      >
+                        Add more items <ArrowRight className="size-3" />
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>

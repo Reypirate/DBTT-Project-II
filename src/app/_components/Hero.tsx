@@ -24,7 +24,7 @@ export default function Hero() {
 
         <p className="text-lg lg:text-xl text-text-main/70 max-w-2xl mb-10 font-inter">
           Never miss an important ceremonial date again. Set gentle reminders, discover curated
-          ritual bundles, and preorder seamlessly for in-store pickup.
+          ritual bundles, and order seamlessly for delivery.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">

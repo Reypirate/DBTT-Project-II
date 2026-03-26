@@ -26,7 +26,7 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
     setQuantityInput(String(Math.max(1, Math.min(99, Math.floor(next)))));
   };
 
-  const handleAddToPreorder = () => {
+  const handleAddToOrder = () => {
     if (!bundle) return;
     addToPreorder(
       {
@@ -39,7 +39,6 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
       quantity,
     );
     setRecentlyAdded(true);
-    window.setTimeout(() => setRecentlyAdded(false), 1800);
   };
 
   if (!bundle) {
@@ -111,57 +110,63 @@ export default function BundleDetailPage({ params }: { params: Promise<{ id: str
 
               <div className="mt-auto space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="inline-flex items-center rounded-lg border border-neutral-main bg-surface">
+                  {!recentlyAdded && (
+                    <div className="inline-flex items-center rounded-lg border border-neutral-main bg-surface">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-r-none"
+                        onClick={() => updateQuantity(quantity - 1)}
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="size-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={quantityInput}
+                        onChange={(e) => setQuantityInput(e.target.value)}
+                        onBlur={() => updateQuantity(quantity)}
+                        className="w-20 text-center border-y-0 border-x border-neutral-main rounded-none h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        aria-label="Quantity"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-l-none"
+                        onClick={() => updateQuantity(quantity + 1)}
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {recentlyAdded ? (
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-r-none"
-                      onClick={() => updateQuantity(quantity - 1)}
-                      aria-label="Decrease quantity"
+                      asChild
+                      variant="secondary"
+                      className="flex-1 gap-3 font-bold text-lg h-10"
                     >
-                      <Minus className="size-4" />
+                      <Link href="/checkout">
+                        <ShoppingCart className="size-5" />
+                        Go to Checkout
+                      </Link>
                     </Button>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={99}
-                      value={quantityInput}
-                      onChange={(e) => setQuantityInput(e.target.value)}
-                      onBlur={() => updateQuantity(quantity)}
-                      className="w-20 text-center border-y-0 border-x border-neutral-main rounded-none h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      aria-label="Quantity"
-                    />
+                  ) : (
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-l-none"
-                      onClick={() => updateQuantity(quantity + 1)}
-                      aria-label="Increase quantity"
+                      onClick={handleAddToOrder}
+                      className="flex-1 gap-3 font-bold text-lg h-10"
                     >
-                      <Plus className="size-4" />
+                      <ShoppingCart className="size-5" />
+                      Add to Order
                     </Button>
-                  </div>
-                  <Button
-                    onClick={handleAddToPreorder}
-                    className="flex-1 gap-3 font-bold text-lg h-10"
-                  >
-                    <ShoppingCart className="size-5" />
-                    Add to Preorder
-                  </Button>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-text-main/60">
-                  <span>{preorderItems.length} item(s) in preorder cart</span>
-                  <Link href="/checkout" className="text-primary font-semibold hover:underline">
-                    Go to Checkout
-                  </Link>
+                  <span>{preorderItems.length} item(s) in cart</span>
                 </div>
-
-                {recentlyAdded && (
-                  <p className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
-                    Added {quantity} x {bundle.name} to preorder cart.
-                  </p>
-                )}
               </div>
             </div>
           </div>

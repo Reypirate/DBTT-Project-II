@@ -1,5 +1,9 @@
+"use client";
+
 import * as React from "react";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingBag } from "lucide-react";
+import { usePreorder } from "@/context/PreorderContext";
+import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +11,9 @@ import { PRODUCTS } from "@/data/products";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
+  const [quantity, setQuantity] = React.useState(1);
+  const [isAdded, setIsAdded] = React.useState(false);
+  const { addToPreorder } = usePreorder();
   const product = PRODUCTS.find((p) => p.id === id);
 
   if (!product) {
@@ -65,13 +72,62 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-text-main/80 text-lg leading-relaxed">{product.description}</p>
               </div>
 
-              <div className="mt-auto space-y-4">
-                <Button className="w-full gap-3 font-bold text-lg h-14">
-                  <ShoppingBag className="size-5" />
-                  Add to Preorder
-                </Button>
-                <p className="text-xs text-center text-text-main/50">
-                  Pickup at 638 Jurong West Street 61 #01-05
+              <div className="mt-auto space-y-6">
+                <div className="flex items-center justify-between bg-background-main p-4 rounded-xl border border-neutral-main">
+                  <span className="font-bold text-text-main">Set Quantity</span>
+                  <div className="inline-flex items-center rounded-lg border border-neutral-main overflow-hidden">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-10 rounded-none hover:bg-neutral-main/20"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      <Minus className="size-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="h-10 w-16 rounded-none border-y-0 border-x border-neutral-main px-2 text-center text-lg font-bold bg-transparent"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-10 rounded-none hover:bg-neutral-main/20"
+                      onClick={() => setQuantity(Math.min(99, quantity + 1))}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {isAdded ? (
+                  <Button
+                    className="w-full gap-3 font-bold text-lg h-16 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300"
+                    variant="secondary"
+                    asChild
+                  >
+                    <Link href="/checkout">
+                      <ShoppingBag className="size-6" />
+                      Go to Checkout
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full gap-3 font-bold text-lg h-16 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300"
+                    onClick={() => {
+                      addToPreorder({ ...product, kind: "product" }, quantity);
+                      setIsAdded(true);
+                    }}
+                  >
+                    <ShoppingBag className="size-6" />
+                    Add to Order — ${(product.price * quantity).toFixed(2)}
+                  </Button>
+                )}
+                <p className="text-xs text-center text-text-main/50 font-medium">
+                  Available for Delivery in 24-48 hours
                 </p>
               </div>
             </div>

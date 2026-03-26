@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, User } from "lucide-react";
+import { LogOut, ShoppingCart, User } from "lucide-react";
+import { usePreorder } from "../context/PreorderContext";
 import { ThemeToggle } from "./ThemeToggle";
 
 export const Navigation = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { preorderItems } = usePreorder();
 
   return (
     <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-neutral-main p-4 flex justify-between items-center shadow-sm">
@@ -59,6 +61,20 @@ export const Navigation = () => {
 
         {isAuthenticated ? (
           <div className="flex items-center gap-4">
+            {!isAdmin && (
+              <Link
+                href="/checkout"
+                className="relative p-2 text-text-main/60 hover:text-primary transition-colors"
+                title="Checkout"
+              >
+                <ShoppingCart className="w-6 h-6" />
+                {preorderItems.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border-2 border-surface">
+                    {preorderItems.reduce((acc: number, item) => acc + item.quantity, 0)}
+                  </span>
+                )}
+              </Link>
+            )}
             <Link
               href={isAdmin ? "/admin" : "/profile"}
               className="flex items-center gap-2 text-sm font-bold bg-primary/10 text-primary px-4 py-2 rounded-full hover:bg-primary/20 transition-colors"
