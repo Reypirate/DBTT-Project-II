@@ -398,7 +398,7 @@ function RemembranceGate() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/membership">
               <Button size="lg" className="px-10 font-bold text-lg h-14">
-                Join Membership
+                Get Notified
               </Button>
             </Link>
             <Link href="/">

@@ -108,7 +108,7 @@ export default function RitualCalendarPage() {
           <Button asChild>
             <Link href="/membership" className="inline-flex items-center gap-2">
               <BellRing className="size-5" />
-              Join Membership
+              Get Notified
             </Link>
           </Button>
         </div>

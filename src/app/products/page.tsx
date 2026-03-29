@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, ShoppingBag } from "lucide-react";
+import { usePreorder } from "@/context/PreorderContext";
+import { Check, Filter, ShoppingBag, ShoppingCart } from "lucide-react";
 import { PRODUCTS } from "@/data/products";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +13,33 @@ const CATEGORIES = ["All", "Paper Offerings", "Incense", "Candles", "Food Offeri
 
 export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
+  const { addToPreorder } = usePreorder();
   const router = useRouter();
 
   const filteredProducts =
     activeCategory === "All" ? PRODUCTS : PRODUCTS.filter((p) => p.category === activeCategory);
+
+  const handleQuickAdd = (e: React.MouseEvent, product: (typeof PRODUCTS)[0]) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addToPreorder(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        kind: "product",
+      },
+      1,
+    );
+
+    setRecentlyAdded((prev) => ({ ...prev, [product.id]: true }));
+    setTimeout(() => {
+      setRecentlyAdded((prev) => ({ ...prev, [product.id]: false }));
+    }, 2000);
+  };
 
   return (
     <div className="bg-background-main min-h-screen py-12">
@@ -65,6 +89,31 @@ export default function ProductsPage() {
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+
+                {/* Quick Add Overlay */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <Button
+                    size="sm"
+                    variant={recentlyAdded[product.id] ? "default" : "secondary"}
+                    className={`gap-2 shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ${
+                      recentlyAdded[product.id] ? "bg-green-600 hover:bg-green-600" : ""
+                    }`}
+                    onClick={(e) => handleQuickAdd(e, product)}
+                  >
+                    {recentlyAdded[product.id] ? (
+                      <>
+                        <Check className="size-4" />
+                        Added
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="size-4" />
+                        Quick Add
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 <div className="absolute top-3 left-3">
                   <Badge
                     variant="secondary"
@@ -89,7 +138,7 @@ export default function ProductsPage() {
 
                 <Button
                   variant="outline"
-                  className="w-full gap-2 mt-auto group-hover:bg-primary group-hover:text-white transition-all duration-300"
+                  className="w-full gap-2 mt-auto hover:bg-primary hover:text-white transition-all duration-300"
                 >
                   <ShoppingBag className="size-4" />
                   View Details & Preorder

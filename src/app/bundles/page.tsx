@@ -1,20 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { usePreorder } from "@/context/PreorderContext";
+import { Check, Filter, ShoppingBag, ShoppingCart } from "lucide-react";
 import { BUNDLES } from "@/data/bundles";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const CATEGORIES = ["All", "Ancestors", "Deities", "Occasion"];
 
 export default function BundleListPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
+  const { addToPreorder } = usePreorder();
 
   const filteredBundles =
     activeCategory === "All" ? BUNDLES : BUNDLES.filter((b) => b.category === activeCategory);
+
+  const handleQuickAdd = (e: React.MouseEvent, bundle: (typeof BUNDLES)[0]) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addToPreorder(
+      {
+        id: bundle.id,
+        name: bundle.name,
+        price: bundle.price,
+        image: bundle.image,
+        kind: "bundle",
+      },
+      1,
+    );
+
+    setRecentlyAdded((prev) => ({ ...prev, [bundle.id]: true }));
+    setTimeout(() => {
+      setRecentlyAdded((prev) => ({ ...prev, [bundle.id]: false }));
+    }, 2000);
+  };
 
   return (
     <div className="bg-background-main min-h-screen py-12">
@@ -61,6 +85,31 @@ export default function BundleListPage() {
                   alt={bundle.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+
+                {/* Quick Add Overlay */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <Button
+                    size="sm"
+                    variant={recentlyAdded[bundle.id] ? "default" : "secondary"}
+                    className={`gap-2 shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ${
+                      recentlyAdded[bundle.id] ? "bg-green-600 hover:bg-green-600" : ""
+                    }`}
+                    onClick={(e) => handleQuickAdd(e, bundle)}
+                  >
+                    {recentlyAdded[bundle.id] ? (
+                      <>
+                        <Check className="size-4" />
+                        Added
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="size-4" />
+                        Quick Add
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 <div className="absolute top-4 left-4">
                   <Badge
                     variant="secondary"

@@ -11,13 +11,38 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { usePreorder } from "@/context/PreorderContext";
 
 export default function FeaturedBundles() {
   const router = useRouter();
+  const { addToPreorder } = usePreorder();
+  const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
   const featuredBundles = BUNDLES.slice(0, 4);
+
+  const handleQuickAdd = (e: React.MouseEvent, bundle: (typeof BUNDLES)[0]) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addToPreorder(
+      {
+        id: bundle.id,
+        name: bundle.name,
+        price: bundle.price,
+        image: bundle.image,
+        kind: "bundle",
+      },
+      1,
+    );
+
+    setRecentlyAdded((prev) => ({ ...prev, [bundle.id]: true }));
+    setTimeout(() => {
+      setRecentlyAdded((prev) => ({ ...prev, [bundle.id]: false }));
+    }, 2000);
+  };
 
   return (
     <section className="py-24 bg-surface border-y border-neutral-main overflow-hidden">
@@ -55,6 +80,31 @@ export default function FeaturedBundles() {
                         alt={bundle.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
+
+                      {/* Quick Add Overlay */}
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Button
+                          size="sm"
+                          variant={recentlyAdded[bundle.id] ? "default" : "secondary"}
+                          className={`gap-2 shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ${
+                            recentlyAdded[bundle.id] ? "bg-green-600 hover:bg-green-600" : ""
+                          }`}
+                          onClick={(e) => handleQuickAdd(e, bundle)}
+                        >
+                          {recentlyAdded[bundle.id] ? (
+                            <>
+                              <Check className="size-4" />
+                              Added
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart className="size-4" />
+                              Quick Add
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
                       <div className="absolute top-4 left-4">
                         <Badge
                           variant="secondary"
