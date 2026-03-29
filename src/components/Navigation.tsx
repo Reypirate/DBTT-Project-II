@@ -45,6 +45,12 @@ export const Navigation = () => {
             <Link href="/admin" className="hover:text-primary transition-colors font-medium">
               Overview
             </Link>
+            <Link
+              href="/admin/analytics"
+              className="hover:text-primary transition-colors font-medium"
+            >
+              Analytics
+            </Link>
             <Link href="/admin/orders" className="hover:text-primary transition-colors font-medium">
               Orders
             </Link>

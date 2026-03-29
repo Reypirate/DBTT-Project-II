@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { Package, AlertTriangle, Plus, Search } from "lucide-react";
+import { Package, AlertTriangle, Plus, Search, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-interface InventoryItem {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-  threshold: number;
-}
+import { MOCK_INVENTORY, type InventoryItem } from "@/data/products";
 
 interface InventoryFormState {
   name: string;
@@ -48,48 +41,7 @@ interface StockoutFrequencyRecord {
 
 const INVENTORY_STORAGE_KEY = "hinlong_owner_inventory";
 
-const DEFAULT_INVENTORY: InventoryItem[] = [
-  {
-    id: "INV-001",
-    name: "Premium Gold Joss Paper",
-    category: "Paper Offerings",
-    price: 5.5,
-    stock: 120,
-    threshold: 50,
-  },
-  {
-    id: "INV-002",
-    name: "Sandalwood Incense (Box)",
-    category: "Incense",
-    price: 12.0,
-    stock: 35,
-    threshold: 40,
-  },
-  {
-    id: "INV-003",
-    name: "Red Altar Candles (Pair)",
-    category: "Candles",
-    price: 4.5,
-    stock: 15,
-    threshold: 20,
-  },
-  {
-    id: "INV-004",
-    name: "Paper Ancestor Clothing",
-    category: "Paper Offerings",
-    price: 18.0,
-    stock: 60,
-    threshold: 25,
-  },
-  {
-    id: "INV-005",
-    name: "Huat Kueh (Trad. Cake)",
-    category: "Food Offerings",
-    price: 3.5,
-    stock: 8,
-    threshold: 10,
-  },
-];
+// Using MOCK_INVENTORY from standard products catalog
 
 const EMPTY_FORM: InventoryFormState = {
   name: "",
@@ -134,12 +86,17 @@ const STOCKOUT_FREQUENCY_HISTORY: StockoutFrequencyRecord[] = [
 function safeReadInventory() {
   try {
     const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
-    if (!raw) return DEFAULT_INVENTORY;
+    if (!raw) return MOCK_INVENTORY;
     const parsed = JSON.parse(raw) as InventoryItem[];
-    return Array.isArray(parsed) ? parsed : DEFAULT_INVENTORY;
+    // Basic validation to ensure it has the new fields
+    if (parsed.length > 0 && typeof parsed[0].velocity !== "number") {
+      localStorage.removeItem(INVENTORY_STORAGE_KEY);
+      return MOCK_INVENTORY;
+    }
+    return Array.isArray(parsed) ? parsed : MOCK_INVENTORY;
   } catch {
     localStorage.removeItem(INVENTORY_STORAGE_KEY);
-    return DEFAULT_INVENTORY;
+    return MOCK_INVENTORY;
   }
 }
 
@@ -242,12 +199,64 @@ export default function AdminInventoryPage() {
       price: Number(price.toFixed(2)),
       stock: Math.floor(stock),
       threshold: Math.floor(threshold),
+      description: "Manually added proxy item",
+      image: "/images/placeholder-item.png",
+      velocity: 0,
+      projectedDemand: 0,
+      trend: "flat",
     };
 
     setItems((prev) => [newItem, ...prev]);
     setForm(EMPTY_FORM);
     setFormError(null);
     setAddOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    if (!items.length) return;
+
+    // Headers
+    const headers = [
+      "ID",
+      "Name",
+      "Category",
+      "Price",
+      "Stock",
+      "Threshold",
+      "Velocity",
+      "Projected Demand",
+      "Trend",
+    ];
+
+    // Rows
+    const csvRows = [
+      headers.join(","),
+      ...items.map((item) => {
+        return [
+          item.id,
+          `"${item.name.replace(/"/g, '""')}"`,
+          `"${item.category.replace(/"/g, '""')}"`,
+          item.price,
+          item.stock,
+          item.threshold,
+          item.velocity,
+          item.projectedDemand,
+          item.trend,
+        ].join(",");
+      }),
+    ];
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `hinlong_inventory_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -275,6 +284,14 @@ export default function AdminInventoryPage() {
                 className="pl-10 pr-4 py-2.5 border border-neutral-main rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
               />
             </div>
+
+            <Button
+              variant="outline"
+              onClick={handleExportCSV}
+              className="gap-2 font-bold whitespace-nowrap hidden sm:flex border-neutral-main"
+            >
+              <Download className="size-4" /> Export CSV
+            </Button>
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>

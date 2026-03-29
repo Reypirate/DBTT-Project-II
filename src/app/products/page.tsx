@@ -9,7 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-const CATEGORIES = ["All", "Paper Offerings", "Incense", "Candles", "Food Offerings"];
+const CATEGORIES = [
+  "All",
+  "Paper Offerings",
+  "Incense & Candles",
+  "Food Offerings",
+  "Altar Supplies",
+];
 
 export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState("All");

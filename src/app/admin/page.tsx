@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  Crown,
-  TrendingUp,
-  Users,
-  Users2,
-  ShoppingBag,
-  Flame,
-  Video,
-  Play,
-  Pause,
-  RotateCcw,
-} from "lucide-react";
+import { Crown, TrendingUp, Users, ShoppingBag, Flame, Video, Play, Pause } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MOCK_ORDERS } from "@/data/mock-orders";
 import {
   Dialog,
   DialogContent,
@@ -24,13 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie } from "recharts";
 import { useMemo, useState } from "react";
 
 type ProxyStatus = "pending" | "in-progress" | "completed";
@@ -59,15 +42,6 @@ interface AnnualRevenuePoint {
   festivalPeak: string | null;
 }
 
-interface BundlePerformanceMetric {
-  bundle: string;
-  revenue: number;
-  sales: number;
-  views: number;
-  orders: number;
-  conversionRate: number;
-}
-
 interface CustomerGroupMetric {
   group: string;
   revenue: number;
@@ -76,24 +50,6 @@ interface CustomerGroupMetric {
   avgOrderValue: number;
   topProduct: string;
 }
-
-interface PeakSeasonForecast {
-  season: string;
-  focusItem: string;
-  demandLiftPercent: number;
-  daysUntil: number;
-  confidencePercent: number;
-}
-
-const THEME_COLORS = {
-  primary: "var(--color-primary, #8b1e2d)",
-  secondary: "var(--color-secondary, #b8921d)",
-  chart1: "var(--color-chart-1, #4f46e5)",
-  chart2: "var(--color-chart-2, #0f766e)",
-  chart3: "var(--color-chart-3, #92400e)",
-  chart4: "var(--color-chart-4, #1d4ed8)",
-  chart5: "var(--color-chart-5, #6b7280)",
-} as const;
 
 const revenueData: AnnualRevenuePoint[] = [
   { month: "Jan", revenue: 4200, orders: 45, festivalPeak: null },
@@ -109,58 +65,6 @@ const revenueData: AnnualRevenuePoint[] = [
   { month: "Nov", revenue: 4200, orders: 41, festivalPeak: null },
   { month: "Dec", revenue: 5500, orders: 60, festivalPeak: "Winter Prayers" },
 ];
-
-const bundlePerformanceData: BundlePerformanceMetric[] = [
-  {
-    bundle: "Qingming Essential Kit",
-    revenue: 18400,
-    sales: 240,
-    views: 1840,
-    orders: 240,
-    conversionRate: 13.04,
-  },
-  {
-    bundle: "7th Month Hungry Ghost Bundle",
-    revenue: 14600,
-    sales: 210,
-    views: 1650,
-    orders: 210,
-    conversionRate: 12.73,
-  },
-  {
-    bundle: "Everyday Deity Offering Set",
-    revenue: 12300,
-    sales: 180,
-    views: 1580,
-    orders: 180,
-    conversionRate: 11.39,
-  },
-  {
-    bundle: "Respect Bundle",
-    revenue: 9800,
-    sales: 145,
-    views: 1290,
-    orders: 145,
-    conversionRate: 11.24,
-  },
-  {
-    bundle: "CNY Wealth & Prosperity Set",
-    revenue: 8600,
-    sales: 118,
-    views: 970,
-    orders: 118,
-    conversionRate: 12.16,
-  },
-];
-
-const topBundleSalesData = bundlePerformanceData
-  .map((bundle) => ({ sales: bundle.sales, label: bundle.bundle.replace(" Bundle", "") }))
-  .sort((a, b) => b.sales - a.sales);
-
-const revenuePerBundleData = bundlePerformanceData.map((bundle) => ({
-  bundle: bundle.bundle.replace(" Bundle", ""),
-  revenue: bundle.revenue,
-}));
 
 const customerGroupRevenueData: CustomerGroupMetric[] = [
   {
@@ -228,46 +132,6 @@ const customerGroupRevenueData: CustomerGroupMetric[] = [
     topProduct: "Daily Devotion Set",
   },
 ];
-
-const peakSeasonForecastData: PeakSeasonForecast[] = [
-  {
-    season: "Qingming Cycle",
-    focusItem: "Qingming Essential Kit",
-    demandLiftPercent: 120,
-    daysUntil: 14,
-    confidencePercent: 89,
-  },
-  {
-    season: "Hungry Ghost Cycle",
-    focusItem: "7th Month Hungry Ghost Bundle",
-    demandLiftPercent: 105,
-    daysUntil: 41,
-    confidencePercent: 84,
-  },
-  {
-    season: "Lunar Year-End",
-    focusItem: "CNY Wealth & Prosperity Set",
-    demandLiftPercent: 72,
-    daysUntil: 92,
-    confidencePercent: 76,
-  },
-];
-
-const GROUP_BAR_COLORS = [
-  THEME_COLORS.primary,
-  THEME_COLORS.secondary,
-  THEME_COLORS.chart1,
-  THEME_COLORS.chart2,
-  THEME_COLORS.chart3,
-  THEME_COLORS.chart4,
-  THEME_COLORS.chart5,
-  "var(--color-muted-foreground, #9ca3af)",
-];
-
-const chartConfig = {
-  revenue: { label: "Revenue ($)", color: THEME_COLORS.primary },
-  orders: { label: "Orders Count", color: THEME_COLORS.secondary },
-} satisfies ChartConfig;
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -339,14 +203,6 @@ export default function AdminDashboardPage() {
       Math.round(
         customerGroupRevenueData.reduce((sum, group) => sum + group.retentionRate, 0) /
           customerGroupRevenueData.length,
-      ),
-    [],
-  );
-
-  const topRetentionSegment = useMemo(
-    () =>
-      customerGroupRevenueData.reduce((best, current) =>
-        current.retentionRate > best.retentionRate ? current : best,
       ),
     [],
   );
@@ -579,14 +435,49 @@ export default function AdminDashboardPage() {
           className="grid lg:grid-cols-2 gap-8"
         >
           <motion.div variants={itemVariants}>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="font-playfair text-2xl">Recent Preorders</CardTitle>
+            <Card className="h-full border-neutral-main">
+              <CardHeader className="pb-3 border-b border-neutral-main/10">
+                <CardTitle className="font-playfair text-xl flex justify-between items-center">
+                  Recent Orders
+                  <Button
+                    variant="link"
+                    size="sm"
+                    asChild
+                    className="p-0 h-auto font-medium text-primary"
+                  >
+                    <Link href="/admin/orders">View All</Link>
+                  </Button>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-text-main/60 italic text-sm">
-                  A full view is available in the Orders Management page.
-                </p>
+              <CardContent className="px-0 pb-0 sm:pb-4 pt-1">
+                <div className="divide-y divide-neutral-main/10">
+                  {MOCK_ORDERS.slice(0, 4).map((order) => (
+                    <div
+                      key={order.id}
+                      className="p-4 sm:px-6 hover:bg-surface/50 transition-colors flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-bold text-sm text-text-main mb-1">
+                          {order.id} &bull; {order.customer}
+                        </p>
+                        <p className="text-[11px] text-text-main/60">
+                          {order.items.length} item(s) &bull; Pickup:{" "}
+                          {new Date(order.pickupDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right flex flex-col items-end">
+                        <p className="font-bold text-sm text-primary mb-1">
+                          ${order.total.toFixed(2)}
+                        </p>
+                        <Badge
+                          className={`text-[9px] uppercase px-1.5 py-0 border-neutral-main/30 bg-surface text-text-main hover:bg-surface`}
+                        >
+                          {order.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -609,343 +500,6 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
-        </motion.div>
-
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          className="mt-8"
-        >
-          <Card className="p-6">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
-                <TrendingUp className="size-5 text-secondary" />
-                Operational Analytics
-              </CardTitle>
-              <p className="text-sm text-text-main/60">
-                Monthly revenue and seasonal demand aggregates.
-              </p>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-8">
-                <div>
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
-                    Annual Revenue Trend & Festival Peaks
-                  </h4>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer config={chartConfig} className="aspect-none h-full w-full">
-                      <AreaChart
-                        data={revenueData}
-                        margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={THEME_COLORS.primary} stopOpacity={0.4} />
-                            <stop offset="95%" stopColor={THEME_COLORS.primary} stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis
-                          dataKey="month"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[11px] text-text-main/60"
-                        />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                        <Area
-                          dataKey="revenue"
-                          type="monotone"
-                          fill="url(#revenueGrad)"
-                          stroke={THEME_COLORS.primary}
-                          strokeWidth={2.5}
-                        />
-                      </AreaChart>
-                    </ChartContainer>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-neutral-main/10">
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-secondary" />
-                      Top Product Bundles
-                    </h4>
-                    <div className="h-[180px]">
-                      <ChartContainer
-                        config={{ sales: { label: "Total Sales", color: THEME_COLORS.secondary } }}
-                        className="aspect-none h-full w-full"
-                      >
-                        <BarChart
-                          data={topBundleSalesData}
-                          layout="vertical"
-                          margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
-                        >
-                          <XAxis type="number" hide />
-                          <YAxis
-                            dataKey="label"
-                            type="category"
-                            tickLine={false}
-                            axisLine={false}
-                            className="text-[10px] text-text-main/60"
-                            width={90}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                          />
-                          <Bar
-                            dataKey="sales"
-                            fill={THEME_COLORS.secondary}
-                            radius={[0, 4, 4, 0]}
-                            barSize={20}
-                          />
-                        </BarChart>
-                      </ChartContainer>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-600" />
-                      Peak Season Forecast
-                    </h4>
-                    <div className="bg-surface border border-neutral-main/20 rounded-xl p-5 h-full flex flex-col justify-center">
-                      <div className="space-y-4">
-                        {peakSeasonForecastData.map((forecast) => (
-                          <div key={forecast.season} className="space-y-1">
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-text-main/70">{forecast.season}</span>
-                              <span className="font-bold text-secondary">
-                                +{forecast.demandLiftPercent}% Demand
-                              </span>
-                            </div>
-                            <div className="text-xs text-text-main/60">
-                              {forecast.focusItem} {forecast.daysUntil} days{" "}
-                              {forecast.confidencePercent}% confidence
-                            </div>
-                          </div>
-                        ))}
-                        <div className="pt-3 border-t border-neutral-main/10">
-                          <Button
-                            size="sm"
-                            className="w-full bg-secondary hover:bg-secondary/90 text-white"
-                            asChild
-                          >
-                            <Link href="/admin/forecast">View Forecast Model</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid lg:grid-cols-2 gap-8 pt-6 border-t border-neutral-main/10">
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary" />
-                      Revenue per Bundle
-                    </h4>
-                    <div className="h-[220px] w-full">
-                      <ChartContainer
-                        config={{ revenue: { label: "Revenue", color: THEME_COLORS.chart1 } }}
-                        className="aspect-none h-full w-full"
-                      >
-                        <BarChart data={revenuePerBundleData} margin={{ left: 0, right: 8 }}>
-                          <XAxis dataKey="bundle" tickLine={false} axisLine={false} interval={0} />
-                          <YAxis
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(value) => `$${value / 1000}k`}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                          />
-                          <Bar dataKey="revenue" fill={THEME_COLORS.chart1} radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                      </ChartContainer>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <RotateCcw className="size-4 text-secondary" />
-                      Conversion Rate per Bundle
-                    </h4>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {bundlePerformanceData.slice(0, 4).map((bundle) => (
-                        <div
-                          key={bundle.bundle}
-                          className="rounded-xl border border-neutral-main/30 bg-surface p-4"
-                        >
-                          <p className="text-xs text-text-main/60 line-clamp-1">{bundle.bundle}</p>
-                          <p className="text-2xl font-bold text-primary mt-1">
-                            {bundle.conversionRate.toFixed(2)}%
-                          </p>
-                          <div className="flex items-center justify-between mt-2 text-xs text-text-main/60">
-                            <span>{bundle.orders} orders</span>
-                            <span>{bundle.views} views</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          className="mt-8"
-        >
-          <Card className="p-6">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
-                <Users2 className="size-5 text-primary" />
-                Customer Group Analytics
-              </CardTitle>
-              <p className="text-sm text-text-main/60">
-                Revenue, retention, and purchasing patterns segmented by customer group.
-              </p>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-8">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
-                    <p className="text-xs uppercase tracking-wider text-text-main/60">
-                      Avg Retention Rate
-                    </p>
-                    <p className="text-3xl font-bold text-primary mt-1">{averageRetentionRate}%</p>
-                  </div>
-                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
-                    <p className="text-xs uppercase tracking-wider text-text-main/60">
-                      Top Retained Segment
-                    </p>
-                    <p className="text-3xl font-bold text-primary mt-1">
-                      {topRetentionSegment.group}
-                    </p>
-                    <p className="text-xs text-text-main/60 mt-1">
-                      {topRetentionSegment.retentionRate}% returning customers
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
-                    Revenue by Customer Group
-                  </h4>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer
-                      config={{ revenue: { label: "Revenue ($)", color: THEME_COLORS.chart3 } }}
-                      className="aspect-none h-full w-full"
-                    >
-                      <BarChart data={customerGroupRevenueData} margin={{ left: 4, right: 20 }}>
-                        <XAxis dataKey="group" tickLine={false} axisLine={false} />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          className="text-[11px] text-text-main/60"
-                          tickFormatter={(value) => `$${value / 1000}k`}
-                        />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]} barSize={22}>
-                          {customerGroupRevenueData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ChartContainer>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-secondary" />
-                    Revenue Share by Segment
-                  </h4>
-                  <div className="h-[220px] w-full">
-                    <ChartContainer
-                      config={{
-                        revenue: { label: "Revenue Share", color: THEME_COLORS.secondary },
-                      }}
-                      className="aspect-none h-full w-full"
-                    >
-                      <PieChart>
-                        <Pie
-                          data={customerGroupRevenueData}
-                          dataKey="revenue"
-                          nameKey="group"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                        >
-                          {customerGroupRevenueData.map((_, index) => (
-                            <Cell
-                              key={`pie-cell-${index}`}
-                              fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                      </PieChart>
-                    </ChartContainer>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-neutral-main/10">
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-secondary" />
-                    Purchasing Breakdown by Customer Group
-                  </h4>
-                  <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-surface text-text-main/60 text-xs uppercase tracking-wider">
-                          <th className="p-3 text-left font-bold">Group</th>
-                          <th className="p-3 text-right font-bold">Retention</th>
-                          <th className="p-3 text-left font-bold">Top Product</th>
-                          <th className="p-3 text-right font-bold">Orders</th>
-                          <th className="p-3 text-right font-bold">Avg Order</th>
-                          <th className="p-3 text-right font-bold">Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-main/10">
-                        {customerGroupRevenueData.map((item) => (
-                          <tr key={item.group} className="hover:bg-surface/50 transition-colors">
-                            <td className="p-3 font-bold text-text-main">{item.group}</td>
-                            <td className="p-3 text-right font-semibold text-secondary">
-                              {item.retentionRate}%
-                            </td>
-                            <td className="p-3 text-text-main/70">{item.topProduct}</td>
-                            <td className="p-3 text-right font-medium text-text-main">
-                              {item.orders}
-                            </td>
-                            <td className="p-3 text-right font-medium text-text-main">
-                              ${item.avgOrderValue.toFixed(2)}
-                            </td>
-                            <td className="p-3 text-right font-bold text-primary">
-                              ${item.revenue.toLocaleString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </motion.div>
 
         <Dialog open={videoReviewOpen} onOpenChange={setVideoReviewOpen}>

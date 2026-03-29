@@ -7,49 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-// Mock data for Admin Orders
-const MOCK_ORDERS = [
-  {
-    id: "ORD-2026-892",
-    customer: "John Tan",
-    customerGroup: "Hokkien",
-    status: "pending",
-    items: ["Qingming Essential Kit x1"],
-    total: 38.0,
-    pickupDate: "2026-04-01",
-    time: "Morning",
-  },
-  {
-    id: "ORD-2026-893",
-    customer: "Mary Lim",
-    customerGroup: "Teochew",
-    status: "preparing",
-    items: ["Everyday Deity Offering Set x2", "Sandalwood Incense x1"],
-    total: 45.5,
-    pickupDate: "2026-04-02",
-    time: "Afternoon",
-  },
-  {
-    id: "ORD-2026-894",
-    customer: "David Wong",
-    customerGroup: "Cantonese",
-    status: "ready",
-    items: ["7th Month Hungry Ghost Bundle x1"],
-    total: 45.0,
-    pickupDate: "2026-04-01",
-    time: "Late Afternoon",
-  },
-  {
-    id: "ORD-2026-880",
-    customer: "Sarah Lee",
-    customerGroup: "Hokkien",
-    status: "completed",
-    items: ["Qingming Essential Kit x2"],
-    total: 76.0,
-    pickupDate: "2026-03-28",
-    time: "Morning",
-  },
-];
+import { MOCK_ORDERS } from "@/data/mock-orders";
 
 const GROUP_COLORS: Record<string, string> = {
   Hokkien: "bg-red-100 text-red-700 border-red-200",
