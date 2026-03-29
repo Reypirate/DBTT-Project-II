@@ -25,12 +25,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const SUBSCRIPTION_PRICE = 12.9;
-const SUBSCRIPTION_GST_RATE = 0.09;
+const MEMBERSHIP_PRICE = 12.9;
+const MEMBERSHIP_GST_RATE = 0.09;
 const PREORDER_DELIVERY_FEE = 6;
 
 export default function CheckoutPage() {
-  const { user, isAuthenticated, updateTier } = useAuth();
+  const { user, isAuthenticated, updateMembership } = useAuth();
   const { preorderItems, subtotal, updateQuantity, removeFromPreorder, placeOrder } = usePreorder();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,17 +46,17 @@ export default function CheckoutPage() {
     postalCode: "120123",
   });
 
-  // Subscription Upsell State
-  const [addSubscription, setAddSubscription] = useState(false);
+  // Membership Upsell State
+  const [addMembership, setAddMembership] = useState(false);
 
-  const mode = searchParams.get("mode") === "subscription" ? "subscription" : "preorder";
-  const subscriptionGst = Number((SUBSCRIPTION_PRICE * SUBSCRIPTION_GST_RATE).toFixed(2));
-  const subscriptionTotal = Number((SUBSCRIPTION_PRICE + subscriptionGst).toFixed(2));
+  const mode = searchParams.get("mode") === "membership" ? "membership" : "preorder";
+  const membershipGst = Number((MEMBERSHIP_PRICE * MEMBERSHIP_GST_RATE).toFixed(2));
+  const membershipTotal = Number((MEMBERSHIP_PRICE + membershipGst).toFixed(2));
 
   const preorderDeliveryFee = preorderItems.length > 0 ? PREORDER_DELIVERY_FEE : 0;
   const preorderSubtotal = subtotal;
   const effectivePreorderTotal = Number(
-    (preorderSubtotal + preorderDeliveryFee + (addSubscription ? subscriptionTotal : 0)).toFixed(2),
+    (preorderSubtotal + preorderDeliveryFee + (addMembership ? membershipTotal : 0)).toFixed(2),
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    if (mode === "subscription" && user?.tier === "Subscriber" && !isComplete) {
+    if (mode === "membership" && user?.tier === "Member" && !isComplete) {
       router.replace("/profile");
     }
   }, [isComplete, mode, router, user?.tier]);
@@ -75,14 +75,14 @@ export default function CheckoutPage() {
     return null;
   }
 
-  if (mode === "subscription" && user?.tier === "Subscriber" && !isComplete) {
+  if (mode === "membership" && user?.tier === "Member" && !isComplete) {
     return null;
   }
 
-  const handleSubscriptionCheckout = async () => {
+  const handleMembershipCheckout = async () => {
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    updateTier("Subscriber");
+    updateMembership("Member");
     setIsProcessing(false);
     setIsComplete(true);
   };
@@ -97,8 +97,8 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    if (addSubscription) {
-      updateTier("Subscriber");
+    if (addMembership) {
+      updateMembership("Member");
     }
 
     const order = placeOrder(preorderDeliveryFee, address);
@@ -107,7 +107,7 @@ export default function CheckoutPage() {
     setIsComplete(true);
   };
 
-  if (isComplete && mode === "subscription") {
+  if (isComplete && mode === "membership") {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-background-main p-6">
         <Card className="w-full max-w-md text-center border-primary/30 shadow-xl">
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
             </div>
             <div>
               <h2 className="font-playfair text-3xl font-bold text-text-main mb-2">
-                Subscription Active
+                Membership Active
               </h2>
               <p className="text-text-main/70">
                 Your premium plan is now enabled with reminders, proxy services, and video
@@ -176,10 +176,10 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
         <div className="text-center mb-12">
           <h1 className="font-playfair text-4xl font-bold text-text-main mb-3">
-            {mode === "subscription" ? "Complete Your Subscription" : "Complete Your Order"}
+            {mode === "membership" ? "Complete Your Membership" : "Complete Your Order"}
           </h1>
           <p className="text-text-main/70">
-            {mode === "subscription"
+            {mode === "membership"
               ? "Secure simulated checkout for plan activation."
               : "Review your delivery details and finalize your order."}
           </p>
@@ -288,9 +288,9 @@ export default function CheckoutPage() {
                   <span>Secure, simulated checkout session for demo purposes</span>
                 </div>
 
-                {mode === "subscription" ? (
+                {mode === "membership" ? (
                   <Button
-                    onClick={handleSubscriptionCheckout}
+                    onClick={handleMembershipCheckout}
                     disabled={isProcessing}
                     className="w-full font-bold py-6 text-base mt-4"
                   >
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
                         Processing Payment...
                       </span>
                     ) : (
-                      `Pay $${SUBSCRIPTION_PRICE.toFixed(2)} / month`
+                      `Pay $${MEMBERSHIP_PRICE.toFixed(2)} / month`
                     )}
                   </Button>
                 ) : (
@@ -323,8 +323,8 @@ export default function CheckoutPage() {
             </Card>
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
-            {mode === "preorder" && user?.tier !== "Subscriber" && (
+          <div className="lg:col-span-12 xl:col-span-5 space-y-6">
+            {mode === "preorder" && user?.tier !== "Member" && (
               <Card className="border-primary/30 bg-primary/[0.03] overflow-hidden">
                 <div className="flex flex-col">
                   <div className="p-6 flex-grow">
@@ -333,7 +333,7 @@ export default function CheckoutPage() {
                       Priority Recommendation
                     </div>
                     <h3 className="font-playfair text-xl font-bold text-text-main mb-2">
-                      Upgrade to Subscriber Tier
+                      Join Our Membership
                     </h3>
                     <p className="text-text-main/70 text-xs mb-4">
                       Get free delivery, ritual reminders, and priority sourcing.
@@ -353,23 +353,23 @@ export default function CheckoutPage() {
                       <div>
                         <p className="text-[10px] text-text-main/60">Only</p>
                         <p className="text-2xl font-bold text-primary">
-                          ${SUBSCRIPTION_PRICE.toFixed(2)}
+                          ${MEMBERSHIP_PRICE.toFixed(2)}
                         </p>
                         <p className="text-[10px] text-text-main/60">per month</p>
                       </div>
                       <Button
-                        variant={addSubscription ? "outline" : "default"}
+                        variant={addMembership ? "outline" : "default"}
                         className="font-bold text-sm h-10 px-6"
-                        onClick={() => setAddSubscription(!addSubscription)}
+                        onClick={() => setAddMembership(!addMembership)}
                       >
-                        {addSubscription ? "Remove Tier" : "Add to Order"}
+                        {addMembership ? "Remove Member Tier" : "Add Membership"}
                       </Button>
                     </div>
                   </div>
                 </div>
               </Card>
             )}
-            {mode === "subscription" ? (
+            {mode === "membership" ? (
               <Card className="border-primary/20 bg-primary/[0.02] sticky top-24">
                 <CardHeader>
                   <CardTitle className="font-playfair text-lg flex items-center gap-2">
@@ -380,7 +380,7 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-text-main">Subscriber Plan</p>
+                      <p className="font-bold text-text-main">Membership Plan</p>
                       <p className="text-xs text-text-main/60">Monthly billing</p>
                     </div>
                     <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10">
@@ -393,16 +393,16 @@ export default function CheckoutPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between text-text-main/70">
                       <span>Subtotal</span>
-                      <span>${SUBSCRIPTION_PRICE.toFixed(2)}</span>
+                      <span>${MEMBERSHIP_PRICE.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-text-main/70">
                       <span>GST (9%)</span>
-                      <span>${subscriptionGst.toFixed(2)}</span>
+                      <span>${membershipGst.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-text-main text-base pt-1">
                       <span>Total</span>
-                      <span>${subscriptionTotal.toFixed(2)}</span>
+                      <span>${membershipTotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -501,13 +501,13 @@ export default function CheckoutPage() {
                           <span>Delivery Fee</span>
                           <span>${preorderDeliveryFee.toFixed(2)}</span>
                         </div>
-                        {addSubscription && (
+                        {addMembership && (
                           <div className="flex justify-between text-primary font-medium">
                             <span className="flex items-center gap-1">
                               <Crown className="size-3" />
-                              Subscriber Tier
+                              Membership Tier
                             </span>
-                            <span>${subscriptionTotal.toFixed(2)}</span>
+                            <span>${membershipTotal.toFixed(2)}</span>
                           </div>
                         )}
                         <Separator />

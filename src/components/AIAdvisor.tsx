@@ -160,7 +160,7 @@ export function AIAdvisor() {
                 <Sparkles className="size-5" />
                 The Heritage Advisor
               </div>
-              {user?.tier === "Subscriber" && (
+              {user?.tier === "Member" && (
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary border border-primary/20">
                   <Crown className="size-3" />
                   Premium

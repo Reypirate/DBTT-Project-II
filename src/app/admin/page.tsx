@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Package,
+  Crown,
   TrendingUp,
   Users,
   Users2,
@@ -465,18 +465,18 @@ export default function AdminDashboardPage() {
           </motion.div>
 
           <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }}>
-            <Card className="p-6 h-full flex flex-col justify-between border-red-100 bg-red-50/10">
+            <Card className="p-6 h-full flex flex-col justify-between">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center text-text-main/70 border border-neutral-main">
-                  <Package className="size-6" />
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                  <Crown className="size-6" />
                 </div>
-                <span className="inline-flex text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full">
-                  4 items
+                <span className="inline-flex text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                  +15%
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-text-main/60 mb-1">Low Inventory Alerts</p>
-                <h3 className="font-playfair text-xl font-bold text-red-600">Action Needed</h3>
+                <p className="text-sm font-medium text-text-main/60 mb-1">Active Members</p>
+                <h3 className="font-playfair text-3xl font-bold text-text-main">128</h3>
               </div>
             </Card>
           </motion.div>
@@ -600,8 +600,7 @@ export default function AdminDashboardPage() {
                 <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
                   <h3 className="font-bold text-primary mb-2">Qingming Festival Approaching</h3>
                   <p className="text-sm text-text-main/80 mb-4">
-                    Expected surge in bundle requests in 14 days based on your customer subscriber
-                    base.
+                    Expected surge in bundle requests in 14 days based on your customer member base.
                   </p>
                   <Button size="sm" asChild>
                     <Link href="/admin/inventory">Review Inventory</Link>

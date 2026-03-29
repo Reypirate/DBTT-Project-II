@@ -61,14 +61,14 @@ function sortByDateAscending(rituals: Ritual[]) {
 
 export default function RitualCalendarPage() {
   const { user } = useAuth();
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
   const [rituals, setRituals] = useState<Ritual[]>(UPCOMING_RITUALS);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    if (!isSubscriber) {
+    if (!isMember) {
       setRituals(UPCOMING_RITUALS);
       return;
     }
@@ -88,7 +88,7 @@ export default function RitualCalendarPage() {
     } catch {
       setRituals(UPCOMING_RITUALS);
     }
-  }, [isSubscriber]);
+  }, [isMember]);
 
   if (!mounted) return null;
 
@@ -106,9 +106,9 @@ export default function RitualCalendarPage() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/subscribe" className="inline-flex items-center gap-2">
+            <Link href="/membership" className="inline-flex items-center gap-2">
               <BellRing className="size-5" />
-              Subscribe to Reminders
+              Join Membership
             </Link>
           </Button>
         </div>

@@ -26,7 +26,7 @@ interface User {
   name: string;
   email: string;
   role: "customer" | "admin";
-  tier?: "Free" | "Subscriber";
+  tier?: "Free" | "Member";
   customerGroup?: CustomerGroup;
 }
 
@@ -37,7 +37,7 @@ interface AuthContextType {
   isLoading: boolean;
   logout: () => void;
   login: (email: string, password?: string) => { success: boolean; message?: string };
-  updateTier: (tier: "Free" | "Subscriber") => void;
+  updateMembership: (tier: "Free" | "Member") => void;
   updateCustomerGroup: (group: CustomerGroup) => void;
 }
 
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
-  const updateTier = (tier: "Free" | "Subscriber") => {
+  const updateMembership = (tier: "Free" | "Member") => {
     if (user && user.role === "customer") {
       const updatedUser = { ...user, tier };
       setUser(updatedUser);
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         logout,
         login,
-        updateTier,
+        updateMembership,
         updateCustomerGroup,
       }}
     >

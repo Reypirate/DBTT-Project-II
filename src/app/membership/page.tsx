@@ -28,7 +28,7 @@ const TIERS = [
     highlighted: false,
   },
   {
-    name: "Subscriber",
+    name: "Member",
     price: "$12.90",
     period: "/ month",
     description: "Full heritage experience with proxy services and personalized guidance.",
@@ -42,7 +42,7 @@ const TIERS = [
       { text: "Premium AI Heritage Advisor", included: true },
       { text: "Priority customer support", included: true },
     ],
-    cta: "Subscribe Now",
+    cta: "Join Membership",
     highlighted: true,
   },
 ];
@@ -55,10 +55,10 @@ const FEATURE_ICONS: Record<string, React.ReactNode> = {
   "Premium AI Heritage Advisor": <Crown className="size-4" />,
 };
 
-export default function SubscribePage() {
+export default function MembershipPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
 
   return (
     <div className="bg-background-main min-h-screen py-16">
@@ -80,8 +80,7 @@ export default function SubscribePage() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {TIERS.map((tier) => {
             const isCurrent =
-              (tier.name === "Free" && !isSubscriber) ||
-              (tier.name === "Subscriber" && isSubscriber);
+              (tier.name === "Free" && !isMember) || (tier.name === "Member" && isMember);
 
             return (
               <Card
@@ -153,8 +152,8 @@ export default function SubscribePage() {
                     onClick={() => {
                       if (!isAuthenticated) {
                         router.push("/login");
-                      } else if (tier.name === "Subscriber") {
-                        router.push("/checkout?mode=subscription");
+                      } else if (tier.name === "Member") {
+                        router.push("/checkout?mode=membership");
                       }
                     }}
                   >

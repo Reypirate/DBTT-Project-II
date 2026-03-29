@@ -101,7 +101,7 @@ function isRemembranceEntry(value: unknown): value is RemembranceEntry {
 
 export default function RemembrancePage() {
   const { user } = useAuth();
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
 
   const [remembrances, setRemembrances] = useState<RemembranceEntry[]>([]);
   const [open, setOpen] = useState(false);
@@ -135,7 +135,7 @@ export default function RemembrancePage() {
 
   if (!mounted) return null;
 
-  if (!isSubscriber) {
+  if (!isMember) {
     return <RemembranceGate />;
   }
 
@@ -192,12 +192,12 @@ export default function RemembrancePage() {
               Build your family's ancestral calendar. We track the dates and recommend culturally
               accurately sets to honor your loved ones respectfully.
             </p>
-            {isSubscriber && (
+            {isMember && (
               <Badge
                 variant="default"
                 className="mt-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
               >
-                Subscriber Advantage: Proxy Services Enabled
+                Member Advantage: Proxy Services Enabled
               </Badge>
             )}
           </div>
@@ -341,7 +341,7 @@ export default function RemembrancePage() {
           {remembrances.map((item) => (
             <div key={item.id} className="space-y-4">
               <RemembranceCard item={item} />
-              {isSubscriber && (
+              {isMember && (
                 <div className="bg-surface border border-neutral-main rounded-xl p-4 flex justify-between items-center shadow-sm">
                   <div className="flex gap-4">
                     <Button size="sm" variant="ghost" className="gap-2 text-secondary px-2">
@@ -368,7 +368,7 @@ export default function RemembrancePage() {
                     variant="outline"
                     className="text-[10px] uppercase font-bold text-text-main/40"
                   >
-                    Sub Access
+                    Member Tier
                   </Badge>
                 </div>
               )}
@@ -392,13 +392,13 @@ function RemembranceGate() {
             Ancestor Remembrance Dashboard
           </h1>
           <p className="text-xl text-text-main/70 mb-8 max-w-2xl mx-auto">
-            Build a legacy calendar for your loved ones. Subscribers can track important dates,
-            receive reminders, and book proxy burning services for birthdays and anniversaries.
+            Build a legacy calendar for your loved ones. Members can track important dates, receive
+            reminders, and book proxy burning services for birthdays and anniversaries.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/subscribe">
+            <Link href="/membership">
               <Button size="lg" className="px-10 font-bold text-lg h-14">
-                Upgrade to Subscriber
+                Join Membership
               </Button>
             </Link>
             <Link href="/">

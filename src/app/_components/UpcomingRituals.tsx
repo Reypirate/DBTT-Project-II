@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function UpcomingRituals() {
   const { user } = useAuth();
   const upcomingRituals = UPCOMING_RITUALS.filter((r) => r.isUpcoming).slice(0, 3);
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
 
   return (
     <section className="py-24 bg-background-main">
@@ -52,7 +52,7 @@ export default function UpcomingRituals() {
                 </h3>
                 <p className="text-text-main/70 leading-relaxed mb-4">{ritual.description}</p>
 
-                {isSubscriber && (
+                {isMember && (
                   <div className="flex flex-wrap gap-2 mt-4">
                     <Button
                       size="sm"
@@ -75,8 +75,8 @@ export default function UpcomingRituals() {
               </div>
 
               <div className="flex-shrink-0 self-start md:self-center w-full md:w-auto flex flex-col gap-2">
-                <Button asChild variant={isSubscriber ? "ghost" : "outline"}>
-                  <Link href="/calendar">{isSubscriber ? "View Management" : "Set Reminder"}</Link>
+                <Button asChild variant={isMember ? "ghost" : "outline"}>
+                  <Link href="/calendar">{isMember ? "Manage Rituals" : "Set Reminder"}</Link>
                 </Button>
               </div>
             </Card>

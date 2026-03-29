@@ -41,7 +41,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading, updateTier, updateCustomerGroup } = useAuth();
+  const { user, isAuthenticated, isLoading, updateMembership, updateCustomerGroup } = useAuth();
   const { orderLog } = usePreorder();
   const router = useRouter();
   const [reminderOpen, setReminderOpen] = useState(false);
@@ -101,7 +101,7 @@ export default function ProfilePage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const isSubscriber = user.tier === "Subscriber";
+  const isMember = user.tier === "Member";
 
   const freeBenefits = [
     { icon: <Clock className="size-4" />, text: "Ritual calendar access" },
@@ -110,7 +110,7 @@ export default function ProfilePage() {
     { icon: <Check className="size-4" />, text: "Browse products & bundles" },
   ];
 
-  const subscriberBenefits = [
+  const memberBenefits = [
     { icon: <Bell className="size-4" />, text: "Date reminders & actual-day notifications" },
     { icon: <Zap className="size-4" />, text: "AI-recommended bundles based on preferences" },
     { icon: <Crown className="size-4" />, text: "Proxy burning service (offering on your behalf)" },
@@ -125,11 +125,11 @@ export default function ProfilePage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="font-playfair text-4xl font-bold text-text-main">Customer Profile</h1>
-              <Badge variant={isSubscriber ? "default" : "secondary"} className="py-1 px-3">
+              <Badge variant={isMember ? "default" : "secondary"} className="py-1 px-3">
                 {user.tier || "Free"} Tier
               </Badge>
             </div>
-            <p className="text-text-main/70">Manage your subscription and ritual preferences</p>
+            <p className="text-text-main/70">Manage your membership and ritual preferences</p>
           </div>
           <div className="p-4 bg-surface border border-neutral-main rounded-xl flex items-center gap-4">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xl">
@@ -143,17 +143,17 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Subscription Tier Card */}
+          {/* Membership Plan Card */}
           <Card
-            className={`border-2 transition-all duration-300 ${isSubscriber ? "border-primary shadow-lg shadow-primary/5" : "border-neutral-main"}`}
+            className={`border-2 transition-all duration-300 ${isMember ? "border-primary shadow-lg shadow-primary/5" : "border-neutral-main"}`}
           >
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="font-playfair text-2xl">Current Plan</CardTitle>
-                {isSubscriber && <Crown className="size-6 text-primary" />}
+                {isMember && <Crown className="size-6 text-primary" />}
               </div>
               <CardDescription>
-                {isSubscriber
+                {isMember
                   ? "You are currently on our premium legacy plan"
                   : "Enjoy standard access to our heritage guidelines"}
               </CardDescription>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
             <CardContent>
               <div className="mb-8">
                 <p className="text-3xl font-bold mb-1">
-                  {isSubscriber ? "$12.90" : "$0"}
+                  {isMember ? "$12.90" : "$0"}
                   <span className="text-sm font-normal text-text-main/60 inline-block ml-1">
                     / month
                   </span>
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                   Tier Benefits
                 </p>
                 <div className="grid gap-3">
-                  {(isSubscriber ? [...freeBenefits, ...subscriberBenefits] : freeBenefits).map(
+                  {(isMember ? [...freeBenefits, ...memberBenefits] : freeBenefits).map(
                     (benefit, i) => (
                       <div key={i} className="flex items-start gap-3 text-sm">
                         <div className="mt-0.5 text-primary bg-primary/10 p-1 rounded-full">
@@ -184,8 +184,8 @@ export default function ProfilePage() {
                       </div>
                     ),
                   )}
-                  {!isSubscriber &&
-                    subscriberBenefits.map((benefit, i) => (
+                  {!isMember &&
+                    memberBenefits.map((benefit, i) => (
                       <div key={i} className="flex items-start gap-3 text-sm opacity-40">
                         <div className="mt-0.5 text-text-main p-1 rounded-full border border-neutral-main">
                           {benefit.icon}
@@ -198,16 +198,16 @@ export default function ProfilePage() {
 
               <Button
                 onClick={() => {
-                  if (isSubscriber) {
-                    updateTier("Free");
+                  if (isMember) {
+                    updateMembership("Free");
                   } else {
-                    router.push("/subscribe");
+                    router.push("/membership");
                   }
                 }}
-                variant={isSubscriber ? "outline" : "default"}
+                variant={isMember ? "outline" : "default"}
                 className="w-full font-bold py-6 text-lg"
               >
-                {isSubscriber ? "Downgrade to Free" : "Upgrade to Subscriber"}
+                {isMember ? "Manage Membership" : "Join Membership"}
               </Button>
             </CardContent>
           </Card>
@@ -270,11 +270,11 @@ export default function ProfilePage() {
                 </p>
                 <div className="space-y-3">
                   <Link href="/proxy-request">
-                    <Button variant="outline" className="w-full text-sm" disabled={!isSubscriber}>
+                    <Button variant="outline" className="w-full text-sm" disabled={!isMember}>
                       Book New Service
                     </Button>
                   </Link>
-                  {isSubscriber && (
+                  {isMember && (
                     <div className="pt-4 border-t border-neutral-main/20 space-y-2">
                       <p className="text-[10px] font-bold uppercase text-text-main/40 mb-2">
                         Recent Proxy Services
@@ -305,9 +305,9 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                {!isSubscriber && (
+                {!isMember && (
                   <p className="text-[10px] text-red-500 mt-2 text-center uppercase font-bold">
-                    Requires Subscriber Tier
+                    Member Exclusive
                   </p>
                 )}
               </CardContent>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
                 </p>
                 <Dialog open={reminderOpen} onOpenChange={setReminderOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full text-sm" disabled={!isSubscriber}>
+                    <Button variant="outline" className="w-full text-sm" disabled={!isMember}>
                       <Settings2 className="size-4 mr-2" />
                       Configure Reminders
                     </Button>
@@ -376,9 +376,9 @@ export default function ProfilePage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                {!isSubscriber && (
+                {!isMember && (
                   <p className="text-[10px] text-red-500 mt-2 text-center uppercase font-bold">
-                    Requires Subscriber Tier
+                    Member Exclusive
                   </p>
                 )}
               </CardContent>

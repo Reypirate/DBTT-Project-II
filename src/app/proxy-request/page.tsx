@@ -21,7 +21,7 @@ import { Flame, Check, ArrowRight, Package } from "lucide-react";
 export default function ProxyRequestPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
 
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -38,7 +38,7 @@ export default function ProxyRequestPage() {
     return null;
   }
 
-  if (!isSubscriber) {
+  if (!isMember) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center bg-background-main p-6">
         <Card className="w-full max-w-md text-center border-neutral-main">
@@ -46,14 +46,14 @@ export default function ProxyRequestPage() {
             <Flame className="size-12 text-primary/30 mx-auto" />
             <div>
               <h2 className="font-playfair text-2xl font-bold text-text-main mb-2">
-                Subscriber Exclusive
+                Member Exclusive
               </h2>
               <p className="text-text-main/70 text-sm">
-                The Proxy Burning Service is available only for Subscribers. Upgrade your plan to
+                The Proxy Burning Service is available only for Members. Join our membership to
                 access this feature.
               </p>
             </div>
-            <Button onClick={() => router.push("/subscribe")} className="font-bold">
+            <Button onClick={() => router.push("/membership")} className="font-bold">
               View Plans
             </Button>
           </CardContent>
@@ -113,7 +113,7 @@ export default function ProxyRequestPage() {
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
             <Flame className="size-3 mr-1" />
-            Subscriber Service
+            Member Service
           </Badge>
           <h1 className="font-playfair text-4xl font-bold text-text-main mb-3">
             Request Proxy Burning

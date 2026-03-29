@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { LogOut, ShoppingCart, User } from "lucide-react";
 import { usePreorder } from "../context/PreorderContext";
+import { CartDrawer } from "./CartDrawer";
 import { ThemeToggle } from "./ThemeToggle";
 
 export const Navigation = () => {
@@ -62,18 +63,19 @@ export const Navigation = () => {
         {isAuthenticated ? (
           <div className="flex items-center gap-4">
             {!isAdmin && (
-              <Link
-                href="/checkout"
-                className="relative p-2 text-text-main/60 hover:text-primary transition-colors"
-                title="Checkout"
-              >
-                <ShoppingCart className="w-6 h-6" />
-                {preorderItems.length > 0 && (
-                  <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border-2 border-surface">
-                    {preorderItems.reduce((acc: number, item) => acc + item.quantity, 0)}
-                  </span>
-                )}
-              </Link>
+              <CartDrawer>
+                <button
+                  className="relative p-2 text-text-main/60 hover:text-primary transition-colors"
+                  title="View Cart"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  {preorderItems.length > 0 && (
+                    <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border-2 border-surface">
+                      {preorderItems.reduce((acc: number, item) => acc + item.quantity, 0)}
+                    </span>
+                  )}
+                </button>
+              </CartDrawer>
             )}
             <Link
               href={isAdmin ? "/admin" : "/profile"}

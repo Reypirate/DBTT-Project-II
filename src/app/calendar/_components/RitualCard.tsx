@@ -67,7 +67,7 @@ function getRecommendedBundles(ritual: Ritual): Bundle[] {
 export default function RitualCard({ ritual }: { ritual: Ritual }) {
   const { user } = useAuth();
   const { addToPreorder } = usePreorder();
-  const isSubscriber = user?.tier === "Subscriber";
+  const isMember = user?.tier === "Member";
   const [isRecommendationsOpen, setIsRecommendationsOpen] = useState(false);
   const [recentlyAdded, setRecentlyAdded] = useState<Record<string, boolean>>({});
   const resetTimers = useRef<Record<string, number>>({});
@@ -168,7 +168,7 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
               We recommend ordering 7 days in advance.
             </div>
 
-            {isSubscriber ? (
+            {isMember ? (
               <Dialog open={isRecommendationsOpen} onOpenChange={setIsRecommendationsOpen}>
                 <DialogTrigger asChild>
                   <button
@@ -241,7 +241,7 @@ export default function RitualCard({ ritual }: { ritual: Ritual }) {
                 variant="outline"
                 className="text-[10px] uppercase font-bold text-primary/40 border-primary/20"
               >
-                Bundle Recommendations (Sub Only)
+                Member Feature: Bundle Recommendations
               </Badge>
             )}
           </div>
