@@ -51,6 +51,12 @@ export const Navigation = () => {
             >
               Analytics
             </Link>
+            <Link
+              href="/admin/proxy-orders"
+              className="hover:text-primary transition-colors font-medium"
+            >
+              Proxy Queue
+            </Link>
             <Link href="/admin/orders" className="hover:text-primary transition-colors font-medium">
               Orders
             </Link>

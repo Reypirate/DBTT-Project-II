@@ -1,39 +1,13 @@
 "use client";
 
-import { Crown, TrendingUp, Users, ShoppingBag, Flame, Video, Play, Pause } from "lucide-react";
+import { Crown, TrendingUp, Users, ShoppingBag, Flame, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_ORDERS } from "@/data/mock-orders";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useMemo, useState } from "react";
-
-type ProxyStatus = "pending" | "in-progress" | "completed";
-
-interface ProxyVideoProof {
-  id: string;
-  completedAt: string;
-  durationSeconds: number;
-  proofNote: string;
-}
-
-interface ProxyQueueItem {
-  id: string;
-  customer: string;
-  ancestor: string;
-  date: string;
-  bundle: string;
-  status: ProxyStatus;
-  videoProof: ProxyVideoProof;
-}
+import { useMemo } from "react";
 
 interface AnnualRevenuePoint {
   month: string;
@@ -146,58 +120,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
 } as const;
 
-const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
-  {
-    id: "PXY-001",
-    customer: "Rey",
-    ancestor: "Grandfather Lim",
-    date: "2026-04-05",
-    bundle: "Qingming Essential Kit",
-    status: "pending",
-    videoProof: {
-      id: "VID-PXY-001",
-      completedAt: "2026-04-05T10:15:00.000Z",
-      durationSeconds: 94,
-      proofNote: "Incense and joss sequence confirmed on altar table.",
-    },
-  },
-  {
-    id: "PXY-002",
-    customer: "Sarah Tan",
-    ancestor: "Grandmother Wong",
-    date: "2026-04-12",
-    bundle: "Everyday Deity Offering Set",
-    status: "in-progress",
-    videoProof: {
-      id: "VID-PXY-002",
-      completedAt: "2026-04-12T14:40:00.000Z",
-      durationSeconds: 88,
-      proofNote: "Fulfillment recording queued after offering completion.",
-    },
-  },
-  {
-    id: "PXY-003",
-    customer: "James Lee",
-    ancestor: "Father Lee",
-    date: "2026-03-28",
-    bundle: "7th Month Hungry Ghost Bundle",
-    status: "completed",
-    videoProof: {
-      id: "VID-PXY-003",
-      completedAt: "2026-03-28T18:05:00.000Z",
-      durationSeconds: 112,
-      proofNote: "Full burn sequence and completion bow captured end-to-end.",
-    },
-  },
-];
-
 export default function AdminDashboardPage() {
-  const [proxyQueue, setProxyQueue] = useState<ProxyQueueItem[]>(INITIAL_PROXY_QUEUE);
-  const [completingProxyIds, setCompletingProxyIds] = useState<Record<string, boolean>>({});
-  const [videoReviewOpen, setVideoReviewOpen] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [reviewingProxy, setReviewingProxy] = useState<ProxyQueueItem | null>(null);
-
   const averageRetentionRate = useMemo(
     () =>
       Math.round(
@@ -211,36 +134,6 @@ export default function AdminDashboardPage() {
     () => revenueData.slice(-2).reduce((sum, month) => sum + month.revenue, 0),
     [],
   );
-
-  const updateProxyStatus = (id: string, newStatus: ProxyStatus) => {
-    setProxyQueue((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)),
-    );
-  };
-
-  const completeProxyRequest = (id: string) => {
-    setCompletingProxyIds((prev) => ({ ...prev, [id]: true }));
-    window.setTimeout(() => {
-      updateProxyStatus(id, "completed");
-      setCompletingProxyIds((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }, 1800);
-  };
-
-  const openVideoReview = (proxy: ProxyQueueItem) => {
-    setReviewingProxy(proxy);
-    setVideoReviewOpen(true);
-    setIsVideoPlaying(false);
-  };
-
-  const statusColors: Record<ProxyStatus, string> = {
-    pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-    "in-progress": "bg-blue-100 text-blue-700 hover:bg-blue-100",
-    completed: "bg-green-100 text-green-700 hover:bg-green-100",
-  };
 
   return (
     <div className="bg-background-main min-h-screen py-10 lg:py-12">
@@ -275,9 +168,7 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-text-main/60 mb-1">Active Preorders</p>
-                <h3 className="font-playfair text-3xl font-bold text-text-main">
-                  {proxyQueue.filter((item) => item.status !== "completed").length + 39}
-                </h3>
+                <h3 className="font-playfair text-3xl font-bold text-text-main">42</h3>
               </div>
             </Card>
           </motion.div>
@@ -339,90 +230,43 @@ export default function AdminDashboardPage() {
         </motion.div>
 
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="mb-10">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+          <Card className="border-primary/10 bg-primary/5">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="font-playfair text-xl flex items-center gap-2">
                 <Flame className="size-5 text-primary" />
-                Proxy Service Queue
-                <Badge className="ml-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px]">
-                  {proxyQueue.filter((p) => p.status !== "completed").length} Active
-                </Badge>
+                Proxy Queue Overview
               </CardTitle>
+              <Button
+                size="sm"
+                asChild
+                variant="ghost"
+                className="text-primary hover:text-primary hover:bg-primary/5"
+              >
+                <Link href="/admin/proxy-orders" className="flex items-center gap-1 font-bold">
+                  Manage Queue <ArrowUpRight className="size-4" />
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {proxyQueue.map((request) => (
-                  <div
-                    key={request.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-surface border border-neutral-main/30 rounded-xl"
-                  >
-                    <div className="flex-grow">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-sm text-text-main">{request.id}</p>
-                        <Badge className={`text-[9px] h-4 ${statusColors[request.status]}`}>
-                          {request.status === "in-progress"
-                            ? "In Progress"
-                            : request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-text-main/60">
-                        <strong>{request.customer}</strong> -&gt; {request.ancestor} -{" "}
-                        {request.bundle} -{" "}
-                        {new Date(request.date).toLocaleDateString("en-SG", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {request.status === "pending" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs gap-1"
-                          onClick={() => updateProxyStatus(request.id, "in-progress")}
-                        >
-                          Start Fulfillment
-                        </Button>
-                      )}
-                      {request.status === "in-progress" && (
-                        <>
-                          {!completingProxyIds[request.id] ? (
-                            <Button
-                              size="sm"
-                              className="text-xs gap-1"
-                              onClick={() => completeProxyRequest(request.id)}
-                            >
-                              <Video className="size-3" />
-                              Mark as Complete
-                            </Button>
-                          ) : (
-                            <div className="rounded-lg border border-green-200 bg-green-50 p-2 min-w-[210px]">
-                              <div className="h-10 rounded bg-black/90 text-white text-[10px] flex items-center justify-center gap-1">
-                                <Video className="size-3 animate-pulse" />
-                                Simulating video playback...
-                              </div>
-                              <div className="mt-2 text-[10px] text-green-700 font-bold">
-                                Finalizing completion...
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      {request.status === "completed" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs gap-1"
-                          onClick={() => openVideoReview(request)}
-                        >
-                          <Video className="size-3.5" />
-                          Review Video
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex gap-8">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-text-main/40 mb-1">
+                    Awaiting Action
+                  </p>
+                  <p className="text-3xl font-bold text-text-main font-playfair">12</p>
+                </div>
+                <div className="w-px h-12 bg-primary/10" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-text-main/40 mb-1">
+                    In Fulfillment
+                  </p>
+                  <p className="text-3xl font-bold text-primary font-playfair">08</p>
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-xs text-text-main/60 mt-4 italic">
+                    All proxy service orders require video proof upon completion.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -501,90 +345,6 @@ export default function AdminDashboardPage() {
             </Card>
           </motion.div>
         </motion.div>
-
-        <Dialog open={videoReviewOpen} onOpenChange={setVideoReviewOpen}>
-          <DialogContent className="sm:max-w-[720px] p-0 overflow-hidden">
-            <DialogHeader className="px-6 pt-6">
-              <DialogTitle className="font-playfair text-2xl">
-                Proxy Fulfillment Video Review
-              </DialogTitle>
-            </DialogHeader>
-            {reviewingProxy && (
-              <div className="px-6 pb-6">
-                <div className="rounded-xl overflow-hidden border border-neutral-main/30 bg-black">
-                  <div className="aspect-video w-full bg-gradient-to-br from-neutral-900 to-neutral-700 flex flex-col justify-center items-center text-white relative">
-                    <Video className="size-16 opacity-30 mb-3" />
-                    <p className="text-sm font-medium">
-                      Mock Playback Stream: {reviewingProxy.videoProof.id}
-                    </p>
-                    <p className="text-xs text-white/75 mt-1">{reviewingProxy.bundle}</p>
-                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
-                      <div
-                        className={`h-full ${
-                          isVideoPlaying
-                            ? "w-2/3 bg-green-400 transition-all duration-1000"
-                            : "w-1/4 bg-white/70 transition-all duration-300"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-xl border border-neutral-main/30 bg-surface p-4 space-y-2 text-sm">
-                  <p>
-                    <span className="font-semibold">Order:</span> {reviewingProxy.id}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Customer:</span> {reviewingProxy.customer}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Ancestor:</span> {reviewingProxy.ancestor}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Completed:</span>{" "}
-                    {new Date(reviewingProxy.videoProof.completedAt).toLocaleString("en-SG")}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Duration:</span>{" "}
-                    {reviewingProxy.videoProof.durationSeconds}s
-                  </p>
-                  <p>
-                    <span className="font-semibold">Proof Note:</span>{" "}
-                    {reviewingProxy.videoProof.proofNote}
-                  </p>
-                </div>
-
-                <DialogFooter className="mt-5">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => setIsVideoPlaying((prev) => !prev)}
-                  >
-                    {isVideoPlaying ? (
-                      <>
-                        <Pause className="size-4" />
-                        Pause Review
-                      </>
-                    ) : (
-                      <>
-                        <Play className="size-4" />
-                        Play Review
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setVideoReviewOpen(false);
-                      setIsVideoPlaying(false);
-                    }}
-                  >
-                    Close
-                  </Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

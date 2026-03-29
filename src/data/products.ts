@@ -163,7 +163,7 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export const MOCK_INVENTORY: InventoryItem[] = PRODUCTS.map((p) => {
+export const MOCK_INVENTORY: InventoryItem[] = PRODUCTS.map((p, index) => {
   const isSurging = [
     "Premium Gold Joss Paper (Stack)",
     "Sandalwood Incense (Box)",
@@ -171,17 +171,23 @@ export const MOCK_INVENTORY: InventoryItem[] = PRODUCTS.map((p) => {
     "Longevity Peaches (Shou Tao)",
   ].includes(p.name);
 
-  const trendRand = Math.random();
-  const trend = isSurging ? "up" : trendRand > 0.6 ? "up" : trendRand > 0.3 ? "down" : "flat";
+  // Deterministic "randomness" based on index
+  const seed = (index + 1) * 123.456;
+  const pseudoRand = (val: number) => (Math.sin(val) + 1) / 2;
+
+  const trendVal = pseudoRand(seed);
+  const trend = isSurging ? "up" : trendVal > 0.6 ? "up" : trendVal > 0.3 ? "down" : "flat";
 
   return {
     ...p,
-    stock: Math.floor(Math.random() * 100) + 5,
+    stock: Math.floor(pseudoRand(seed + 1) * 100) + 5,
     threshold: 20,
-    velocity: isSurging ? Math.floor(Math.random() * 20) + 60 : Math.floor(Math.random() * 45) + 5,
+    velocity: isSurging
+      ? Math.floor(pseudoRand(seed + 2) * 20) + 60
+      : Math.floor(pseudoRand(seed + 3) * 45) + 5,
     projectedDemand: isSurging
-      ? Math.floor(Math.random() * 15) + 35
-      : Math.floor(Math.random() * 40) * (trend === "up" ? 1 : trend === "down" ? -1 : 0),
+      ? Math.floor(pseudoRand(seed + 4) * 15) + 35
+      : Math.floor(pseudoRand(seed + 5) * 40) * (trend === "up" ? 1 : trend === "down" ? -1 : 0),
     trend,
   };
 });

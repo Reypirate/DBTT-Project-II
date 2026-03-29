@@ -12,6 +12,8 @@ import {
   AlertCircle,
   ShoppingBag,
   PieChart,
+  Target,
+  Megaphone,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -27,7 +29,7 @@ import {
 } from "@/components/ui/chart";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cell, ComposedChart, Line } from "recharts";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface AnnualRevenuePoint {
   month: string;
@@ -81,6 +83,13 @@ interface CartGapOpportunity {
   missingProduct: string;
   affectedOrders: number;
   potentialRevenue: number;
+}
+
+interface AgeDemographicMetric {
+  bracket: string;
+  proxyBookings: number;
+  diyBundles: number;
+  memberships: number;
 }
 
 const THEME_COLORS = {
@@ -292,6 +301,33 @@ const cartGapData: CartGapOpportunity[] = [
   },
 ];
 
+const ageDemographicData: AgeDemographicMetric[] = [
+  {
+    bracket: "Gen Z (18-24)",
+    proxyBookings: 85,
+    diyBundles: 15,
+    memberships: 40,
+  },
+  {
+    bracket: "Millennials (25-40)",
+    proxyBookings: 120,
+    diyBundles: 45,
+    memberships: 78,
+  },
+  {
+    bracket: "Gen X (41-55)",
+    proxyBookings: 40,
+    diyBundles: 110,
+    memberships: 55,
+  },
+  {
+    bracket: "Seniors (56+)",
+    proxyBookings: 12,
+    diyBundles: 195,
+    memberships: 32,
+  },
+];
+
 const GROUP_BAR_COLORS = [
   THEME_COLORS.primary,
   THEME_COLORS.secondary,
@@ -317,6 +353,12 @@ const containerVariants = {
 } as const;
 
 export default function DeepAnalyticsPage() {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const averageRetentionRate = useMemo(
     () =>
       Math.round(
@@ -468,218 +510,132 @@ export default function DeepAnalyticsPage() {
           </div>
         </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="space-y-8"
-        >
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-6 border-primary/20 bg-primary/5 col-span-1 lg:col-span-2 flex flex-col h-full gap-6">
-              <div className="flex items-start md:items-center gap-4 w-full shrink-0">
-                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary shrink-0">
-                  <Activity className="size-6" />
-                </div>
-                <div>
-                  <h3 className="font-playfair text-xl font-bold text-text-main mb-1">
-                    Surging Product Demand
-                  </h3>
-                  <p className="text-sm text-text-main/70">
-                    High-velocity items requiring immediate restocking attention based on projected
-                    forecast.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex-grow flex flex-col justify-between py-2">
-                {topSurgingProducts.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between group hover:bg-primary/5 p-2 rounded-lg transition-colors"
-                  >
-                    <span className="font-medium text-text-main group-hover:text-primary transition-colors">
-                      {item.name}
-                    </span>
-                    <Badge className="bg-primary hover:bg-primary/90 text-white font-medium py-1 px-3 flex items-center gap-2">
-                      <ArrowUpRight className="size-3 text-white/80" /> +{item.projectedDemand}%
-                    </Badge>
+        {!hasMounted ? (
+          <div className="h-[60vh] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <p className="text-text-main/60 font-medium font-playfair animate-pulse">
+                Synchronizing Analytics Data...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="space-y-8"
+          >
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="p-6 border-primary/20 bg-primary/5 col-span-1 lg:col-span-2 flex flex-col h-full gap-6">
+                <div className="flex items-start md:items-center gap-4 w-full shrink-0">
+                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary shrink-0">
+                    <Activity className="size-6" />
                   </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-6 flex flex-col h-full border-secondary/30 bg-secondary/5 col-span-1">
-              <div className="flex flex-col gap-4 h-full">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <ShoppingBag className="size-5 text-secondary" />
-                    <h3 className="font-playfair text-lg font-bold text-text-main">
-                      Cart-Gap Analysis
+                  <div>
+                    <h3 className="font-playfair text-xl font-bold text-text-main mb-1">
+                      Surging Product Demand
                     </h3>
+                    <p className="text-sm text-text-main/70">
+                      High-velocity items requiring immediate restocking attention based on
+                      projected forecast.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-text-main/70">
-                    Missed cross-sell opportunities based on dialect grouping logic.
-                  </p>
                 </div>
-                <div className="space-y-3 flex-grow overflow-auto">
-                  {cartGapData.map((gap, i) => (
-                    <div key={i} className="text-xs border-l-2 border-secondary/40 pl-3">
-                      <span className="font-bold text-text-main">{gap.missingProduct}</span> missed
-                      in {gap.affectedOrders} orders{" "}
-                      <span className="opacity-70">({gap.dialectGroup})</span>
-                      <div className="text-secondary font-medium mt-0.5">
-                        +${gap.potentialRevenue.toFixed(2)} potential MRR
-                      </div>
+
+                <div className="flex-grow flex flex-col justify-between py-2">
+                  {topSurgingProducts.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between group hover:bg-primary/5 p-2 rounded-lg transition-colors"
+                    >
+                      <span className="font-medium text-text-main group-hover:text-primary transition-colors">
+                        {item.name}
+                      </span>
+                      <Badge className="bg-primary hover:bg-primary/90 text-white font-medium py-1 px-3 flex items-center gap-2">
+                        <ArrowUpRight className="size-3 text-white/80" /> +{item.projectedDemand}%
+                      </Badge>
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2 mt-2 pt-4 border-t border-neutral-main/10">
-                  <Button size="sm" className="w-full text-[10px] h-7 px-2" variant="outline">
-                    Auto-Upsell
-                  </Button>
-                  <Button size="sm" className="w-full text-[10px] h-7 px-2" variant="outline">
-                    SMS Reminder
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
 
-          <Card className="p-6">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
-                <TrendingUp className="size-5 text-secondary" />
-                Operational Analytics
-              </CardTitle>
-              <p className="text-sm text-text-main/60">
-                Monthly revenue and seasonal demand aggregates.
-              </p>
-            </CardHeader>
-            <CardContent className="p-0 sm:p-6">
-              <div className="flex flex-col gap-8">
-                <div>
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
-                    Annual Revenue Trend & Festival Peaks
-                  </h4>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer config={chartConfig} className="aspect-none h-full w-full">
-                      <AreaChart
-                        data={revenueData}
-                        margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={THEME_COLORS.primary} stopOpacity={0.4} />
-                            <stop offset="95%" stopColor={THEME_COLORS.primary} stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <XAxis
-                          dataKey="month"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[11px] text-text-main/60"
-                        />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                        <Area
-                          dataKey="revenue"
-                          type="monotone"
-                          fill="url(#revenueGrad)"
-                          stroke={THEME_COLORS.primary}
-                          strokeWidth={2.5}
-                        />
-                      </AreaChart>
-                    </ChartContainer>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-neutral-main/10">
+              <Card className="p-6 flex flex-col h-full border-secondary/30 bg-secondary/5 col-span-1">
+                <div className="flex flex-col gap-4 h-full">
                   <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-secondary" />
-                      Top Product Bundles
-                    </h4>
-                    <div className="h-[180px]">
-                      <ChartContainer
-                        config={{ sales: { label: "Total Sales", color: THEME_COLORS.secondary } }}
-                        className="aspect-none h-full w-full"
-                      >
-                        <BarChart
-                          data={topBundleSalesData}
-                          layout="vertical"
-                          margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
-                        >
-                          <XAxis type="number" hide />
-                          <YAxis
-                            dataKey="label"
-                            type="category"
-                            tickLine={false}
-                            axisLine={false}
-                            className="text-[10px] text-text-main/60"
-                            width={110}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                          />
-                          <Bar
-                            dataKey="sales"
-                            fill={THEME_COLORS.secondary}
-                            radius={[0, 4, 4, 0]}
-                            barSize={20}
-                          />
-                        </BarChart>
-                      </ChartContainer>
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShoppingBag className="size-5 text-secondary" />
+                      <h3 className="font-playfair text-lg font-bold text-text-main">
+                        Cart-Gap Analysis
+                      </h3>
                     </div>
+                    <p className="text-[11px] text-text-main/70">
+                      Missed cross-sell opportunities based on dialect grouping logic.
+                    </p>
                   </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-600" />
-                      Peak Season Forecast
-                    </h4>
-                    <div className="bg-surface border border-neutral-main/20 rounded-xl p-5 h-full flex flex-col justify-center">
-                      <div className="space-y-4">
-                        {peakSeasonForecastData.map((forecast) => (
-                          <div key={forecast.season} className="space-y-1">
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-text-main/70">{forecast.season}</span>
-                              <span className="font-bold text-secondary">
-                                +{forecast.demandLiftPercent}% Demand
-                              </span>
-                            </div>
-                            <div className="text-xs text-text-main/60">
-                              {forecast.focusItem} {forecast.daysUntil} days{" "}
-                              {forecast.confidencePercent}% confidence
-                            </div>
-                          </div>
-                        ))}
+                  <div className="space-y-3 flex-grow overflow-auto">
+                    {cartGapData.map((gap, i) => (
+                      <div key={i} className="text-xs border-l-2 border-secondary/40 pl-3">
+                        <span className="font-bold text-text-main">{gap.missingProduct}</span>{" "}
+                        missed in {gap.affectedOrders} orders{" "}
+                        <span className="opacity-70">({gap.dialectGroup})</span>
+                        <div className="text-secondary font-medium mt-0.5">
+                          +${gap.potentialRevenue.toFixed(2)} potential MRR
+                        </div>
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-2 pt-4 border-t border-neutral-main/10">
+                    <Button size="sm" className="w-full text-[10px] h-7 px-2" variant="outline">
+                      Auto-Upsell
+                    </Button>
+                    <Button size="sm" className="w-full text-[10px] h-7 px-2" variant="outline">
+                      SMS Reminder
+                    </Button>
                   </div>
                 </div>
+              </Card>
+            </div>
 
-                <div className="pt-8 mt-2 border-t border-neutral-main/10">
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-600" />
-                    Proxy Capacity Risk Forecasting
-                  </h4>
-                  <div className="grid lg:grid-cols-2 gap-8 items-center">
-                    <div className="h-[220px] w-full">
-                      <ChartContainer
-                        config={{
-                          requests: { label: "Projected", color: THEME_COLORS.primary },
-                          capacity: { label: "Limit", color: "#ef4444" },
-                        }}
-                        className="aspect-none h-full w-full"
-                      >
-                        <ComposedChart
-                          data={proxyCapacityData}
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                  <TrendingUp className="size-5 text-secondary" />
+                  Operational Analytics
+                </CardTitle>
+                <p className="text-sm text-text-main/60">
+                  Monthly revenue and seasonal demand aggregates.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0 sm:p-6">
+                <div className="flex flex-col gap-8">
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      Annual Revenue Trend & Festival Peaks
+                    </h4>
+                    <div className="h-[240px] w-full">
+                      <ChartContainer config={chartConfig} className="aspect-none h-full w-full">
+                        <AreaChart
+                          data={revenueData}
                           margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
                         >
+                          <defs>
+                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop
+                                offset="5%"
+                                stopColor={THEME_COLORS.primary}
+                                stopOpacity={0.4}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor={THEME_COLORS.primary}
+                                stopOpacity={0.0}
+                              />
+                            </linearGradient>
+                          </defs>
                           <XAxis
-                            dataKey="date"
+                            dataKey="month"
                             tickLine={false}
                             axisLine={false}
                             tickMargin={8}
@@ -687,373 +643,595 @@ export default function DeepAnalyticsPage() {
                           />
                           <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                           <Area
-                            dataKey="projectedRequests"
+                            dataKey="revenue"
                             type="monotone"
-                            fill={THEME_COLORS.primary}
-                            fillOpacity={0.15}
+                            fill="url(#revenueGrad)"
                             stroke={THEME_COLORS.primary}
-                            strokeWidth={2}
+                            strokeWidth={2.5}
                           />
-                          <Line
-                            dataKey="capacityLimit"
-                            type="step"
-                            stroke="#ef4444"
-                            strokeWidth={2}
-                            strokeDasharray="4 4"
-                            dot={false}
-                          />
-                        </ComposedChart>
+                        </AreaChart>
                       </ChartContainer>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-neutral-main/10">
+                    <div>
+                      <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-secondary" />
+                        Top Product Bundles
+                      </h4>
+                      <div className="h-[180px]">
+                        <ChartContainer
+                          config={{
+                            sales: { label: "Total Sales", color: THEME_COLORS.secondary },
+                          }}
+                          className="aspect-none h-full w-full"
+                        >
+                          <BarChart
+                            data={topBundleSalesData}
+                            layout="vertical"
+                            margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
+                          >
+                            <XAxis type="number" hide />
+                            <YAxis
+                              dataKey="label"
+                              type="category"
+                              tickLine={false}
+                              axisLine={false}
+                              className="text-[10px] text-text-main/60"
+                              width={110}
+                            />
+                            <ChartTooltip
+                              cursor={false}
+                              content={<ChartTooltipContent hideLabel />}
+                            />
+                            <Bar
+                              dataKey="sales"
+                              fill={THEME_COLORS.secondary}
+                              radius={[0, 4, 4, 0]}
+                              barSize={20}
+                            />
+                          </BarChart>
+                        </ChartContainer>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-600" />
+                        Peak Season Forecast
+                      </h4>
+                      <div className="bg-surface border border-neutral-main/20 rounded-xl p-5 h-full flex flex-col justify-center">
+                        <div className="space-y-4">
+                          {peakSeasonForecastData.map((forecast) => (
+                            <div key={forecast.season} className="space-y-1">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-text-main/70">{forecast.season}</span>
+                                <span className="font-bold text-secondary">
+                                  +{forecast.demandLiftPercent}% Demand
+                                </span>
+                              </div>
+                              <div className="text-xs text-text-main/60">
+                                {forecast.focusItem} {forecast.daysUntil} days{" "}
+                                {forecast.confidencePercent}% confidence
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 mt-2 border-t border-neutral-main/10">
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-600" />
+                      Proxy Capacity Risk Forecasting
+                    </h4>
+                    <div className="grid lg:grid-cols-2 gap-8 items-center">
+                      <div className="h-[220px] w-full">
+                        <ChartContainer
+                          config={{
+                            requests: { label: "Projected", color: THEME_COLORS.primary },
+                            capacity: { label: "Limit", color: "#ef4444" },
+                          }}
+                          className="aspect-none h-full w-full"
+                        >
+                          <ComposedChart
+                            data={proxyCapacityData}
+                            margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
+                          >
+                            <XAxis
+                              dataKey="date"
+                              tickLine={false}
+                              axisLine={false}
+                              tickMargin={8}
+                              className="text-[11px] text-text-main/60"
+                            />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <Area
+                              dataKey="projectedRequests"
+                              type="monotone"
+                              fill={THEME_COLORS.primary}
+                              fillOpacity={0.15}
+                              stroke={THEME_COLORS.primary}
+                              strokeWidth={2}
+                            />
+                            <Line
+                              dataKey="capacityLimit"
+                              type="step"
+                              stroke="#ef4444"
+                              strokeWidth={2}
+                              strokeDasharray="4 4"
+                              dot={false}
+                            />
+                          </ComposedChart>
+                        </ChartContainer>
+                      </div>
+                      <div>
+                        <Alert variant="destructive" className="bg-red-50/50 border-red-200">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle className="text-sm font-bold">Capacity Warning</AlertTitle>
+                          <AlertDescription className="text-[12px] mt-2 text-red-900/80 leading-relaxed">
+                            Projected proxy requests for Qingming week exceed operational capacity
+                            by 15%. Recommend immediate intervention to prevent fulfillment
+                            bottlenecks.
+                            <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-8 text-[11px] px-4 sm:w-auto"
+                              >
+                                Cap Pre-orders
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-[11px] px-4 sm:w-auto border-red-200 text-red-800 bg-white hover:bg-red-50"
+                              >
+                                Request Temp Staff
+                              </Button>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid lg:grid-cols-2 gap-8 pt-8 mt-2 border-t border-neutral-main/10">
+                    <div>
+                      <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-primary" />
+                        Revenue per Bundle
+                      </h4>
+                      <div className="h-[220px] w-full">
+                        <ChartContainer
+                          config={{ revenue: { label: "Revenue", color: THEME_COLORS.chart1 } }}
+                          className="aspect-none h-full w-full"
+                        >
+                          <BarChart data={revenuePerBundleData} margin={{ left: 0, right: 8 }}>
+                            <XAxis
+                              dataKey="bundle"
+                              tickLine={false}
+                              axisLine={false}
+                              interval={0}
+                              angle={-45}
+                              textAnchor="end"
+                              height={70}
+                              tick={{ fontSize: 10 }}
+                              dx={-5}
+                              dy={5}
+                            />
+                            <YAxis
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={(value) => `$${value / 1000}k`}
+                            />
+                            <ChartTooltip
+                              cursor={false}
+                              content={<ChartTooltipContent hideLabel />}
+                            />
+                            <Bar
+                              dataKey="revenue"
+                              fill={THEME_COLORS.chart1}
+                              radius={[6, 6, 0, 0]}
+                            />
+                          </BarChart>
+                        </ChartContainer>
+                      </div>
                     </div>
                     <div>
-                      <Alert variant="destructive" className="bg-red-50/50 border-red-200">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle className="text-sm font-bold">Capacity Warning</AlertTitle>
-                        <AlertDescription className="text-[12px] mt-2 text-red-900/80 leading-relaxed">
-                          Projected proxy requests for Qingming week exceed operational capacity by
-                          15%. Recommend immediate intervention to prevent fulfillment bottlenecks.
-                          <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="h-8 text-[11px] px-4 sm:w-auto"
-                            >
-                              Cap Pre-orders
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-[11px] px-4 sm:w-auto border-red-200 text-red-800 bg-white hover:bg-red-50"
-                            >
-                              Request Temp Staff
-                            </Button>
+                      <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                        <RotateCcw className="size-4 text-secondary" />
+                        Conversion Rate per Bundle
+                      </h4>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {bundlePerformanceData.slice(0, 4).map((bundle) => (
+                          <div
+                            key={bundle.bundle}
+                            className="rounded-xl border border-neutral-main/30 bg-surface p-4"
+                          >
+                            <p className="text-xs text-text-main/60 line-clamp-1">
+                              {bundle.bundle}
+                            </p>
+                            <p className="text-2xl font-bold text-primary mt-1">
+                              {bundle.conversionRate.toFixed(2)}%
+                            </p>
+                            <div className="flex items-center justify-between mt-2 text-xs text-text-main/60">
+                              <span>{bundle.orders} orders</span>
+                              <span>{bundle.views} views</span>
+                            </div>
                           </div>
-                        </AlertDescription>
-                      </Alert>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="grid lg:grid-cols-2 gap-8 pt-8 mt-2 border-t border-neutral-main/10">
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary" />
-                      Revenue per Bundle
-                    </h4>
-                    <div className="h-[220px] w-full">
-                      <ChartContainer
-                        config={{ revenue: { label: "Revenue", color: THEME_COLORS.chart1 } }}
-                        className="aspect-none h-full w-full"
-                      >
-                        <BarChart data={revenuePerBundleData} margin={{ left: 0, right: 8 }}>
-                          <XAxis
-                            dataKey="bundle"
-                            tickLine={false}
-                            axisLine={false}
-                            interval={0}
-                            angle={-45}
-                            textAnchor="end"
-                            height={70}
-                            tick={{ fontSize: 10 }}
-                            dx={-5}
-                            dy={5}
-                          />
-                          <YAxis
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(value) => `$${value / 1000}k`}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                          />
-                          <Bar dataKey="revenue" fill={THEME_COLORS.chart1} radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                      </ChartContainer>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                      <RotateCcw className="size-4 text-secondary" />
-                      Conversion Rate per Bundle
-                    </h4>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {bundlePerformanceData.slice(0, 4).map((bundle) => (
-                        <div
-                          key={bundle.bundle}
-                          className="rounded-xl border border-neutral-main/30 bg-surface p-4"
-                        >
-                          <p className="text-xs text-text-main/60 line-clamp-1">{bundle.bundle}</p>
-                          <p className="text-2xl font-bold text-primary mt-1">
-                            {bundle.conversionRate.toFixed(2)}%
-                          </p>
-                          <div className="flex items-center justify-between mt-2 text-xs text-text-main/60">
-                            <span>{bundle.orders} orders</span>
-                            <span>{bundle.views} views</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="p-6">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
-                <Users2 className="size-5 text-primary" />
-                Customer Group Analytics
-              </CardTitle>
-              <p className="text-sm text-text-main/60">
-                Revenue, retention, and purchasing patterns segmented by customer group.
-              </p>
-            </CardHeader>
-            <CardContent className="p-0 sm:p-6">
-              <div className="flex flex-col gap-8">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
-                    <p className="text-xs uppercase tracking-wider text-text-main/60">
-                      Avg Retention Rate
-                    </p>
-                    <p className="text-3xl font-bold text-primary mt-1">{averageRetentionRate}%</p>
-                  </div>
-                  <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
-                    <p className="text-xs uppercase tracking-wider text-text-main/60">
-                      Top Retained Segment
-                    </p>
-                    <p className="text-3xl font-bold text-primary mt-1">
-                      {topRetentionSegment.group}
-                    </p>
-                    <p className="text-xs text-text-main/60 mt-1">
-                      {topRetentionSegment.retentionRate}% returning customers
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary" />
-                    Revenue by Customer Group
-                  </h4>
-                  <div className="h-[240px] w-full">
-                    <ChartContainer
-                      config={{ revenue: { label: "Revenue ($)", color: THEME_COLORS.chart3 } }}
-                      className="aspect-none h-full w-full"
-                    >
-                      <BarChart data={customerGroupRevenueData} margin={{ left: 4, right: 20 }}>
-                        <XAxis dataKey="group" tickLine={false} axisLine={false} />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          className="text-[11px] text-text-main/60"
-                          tickFormatter={(value) => `$${value / 1000}k`}
-                        />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]} barSize={22}>
-                          {customerGroupRevenueData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ChartContainer>
-                  </div>
-                </div>
-
-                <div className="pt-8 mt-2 border-t border-neutral-main/10">
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-secondary" />
-                    Membership Upgrade Propensity
-                  </h4>
-                  <div className="grid lg:grid-cols-2 gap-8 items-center">
-                    <div className="h-[220px] w-full">
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                  <Target className="size-5 text-primary" />
+                  Demographic Intelligence
+                </CardTitle>
+                <p className="text-sm text-text-main/60">
+                  Purchasing behaviors and service preference segmented by age bracket.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0 sm:p-6">
+                <div className="flex flex-col gap-10">
+                  <div className="grid lg:grid-cols-2 gap-10 items-center">
+                    <div className="h-[280px] w-full">
                       <ChartContainer
                         config={{
-                          probability: {
-                            label: "Conversion Prob (%)",
-                            color: THEME_COLORS.secondary,
-                          },
+                          proxyBookings: { label: "Proxy Bookings", color: THEME_COLORS.primary },
+                          diyBundles: { label: "DIY Bundles", color: THEME_COLORS.secondary },
+                          memberships: { label: "Memberships", color: THEME_COLORS.chart1 },
                         }}
                         className="aspect-none h-full w-full"
                       >
                         <BarChart
-                          data={propensityData}
-                          layout="vertical"
-                          margin={{ left: 0, right: 30, top: 0, bottom: 0 }}
+                          data={ageDemographicData}
+                          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                         >
-                          <XAxis type="number" hide />
-                          <YAxis
-                            dataKey="cohort"
-                            type="category"
+                          <XAxis
+                            dataKey="bracket"
                             tickLine={false}
                             axisLine={false}
-                            className="text-[11px] font-medium text-text-main/70"
-                            width={100}
+                            className="text-[10px] sm:text-[11px]"
                           />
+                          <YAxis tickLine={false} axisLine={false} className="text-[11px]" />
                           <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                           <Bar
-                            dataKey="probability"
+                            dataKey="proxyBookings"
+                            stackId="a"
+                            fill={THEME_COLORS.primary}
+                            radius={[0, 0, 0, 0]}
+                            barSize={40}
+                          />
+                          <Bar
+                            dataKey="diyBundles"
+                            stackId="a"
                             fill={THEME_COLORS.secondary}
-                            radius={[0, 4, 4, 0]}
-                            barSize={28}
-                          >
-                            {propensityData.map((_, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={
-                                  index < 2
-                                    ? THEME_COLORS.secondary
-                                    : "var(--color-muted-foreground)"
-                                }
-                              />
-                            ))}
-                          </Bar>
+                            radius={[0, 0, 0, 0]}
+                          />
+                          <Bar
+                            dataKey="memberships"
+                            stackId="a"
+                            fill={THEME_COLORS.chart1}
+                            radius={[4, 4, 0, 0]}
+                          />
                         </BarChart>
                       </ChartContainer>
                     </div>
-                    <div>
-                      <div className="bg-surface border border-secondary/30 rounded-xl p-6 shadow-sm">
-                        <div className="flex items-start gap-4 mb-5">
-                          <PieChart className="size-6 text-secondary shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-bold text-text-main text-sm leading-relaxed">
-                              34 non-members have purchased 3+ remembrance bundles this year.
-                            </p>
-                            <p className="text-xs text-secondary font-bold mt-1.5 flex items-center gap-1.5 w-fit bg-secondary/10 px-2 py-1 rounded">
-                              <TrendingUp className="size-3" /> 85% conversion probability
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-3 border-t border-neutral-main/10 pt-5">
+
+                    <div className="space-y-6">
+                      <Alert className="bg-primary/5 border-primary/20">
+                        <Megaphone className="h-4 w-4 text-primary" />
+                        <AlertTitle className="text-sm font-bold text-primary">
+                          Generational Shift
+                        </AlertTitle>
+                        <AlertDescription className="text-xs mt-1.5 text-text-main/80 leading-relaxed">
+                          Millennials and Gen Z account for{" "}
+                          <strong>65% of all Proxy Service bookings</strong>, indicating a strong
+                          preference for "Done-For-You" convenience over DIY rituals.
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="p-5 border border-neutral-main/20 rounded-xl bg-surface">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-text-main/50 mb-4">
+                          Strategic Marketing Responses
+                        </p>
+                        <div className="flex flex-col gap-3">
                           <Button
-                            size="sm"
-                            className="h-9 text-xs px-4 sm:w-auto bg-secondary hover:bg-secondary/90 text-white shadow-sm"
+                            variant="outline"
+                            className="justify-start gap-3 h-11 border-neutral-main/30 hover:bg-primary/5 hover:text-primary transition-all group"
                           >
-                            Deploy Target Discount
+                            <Target className="size-4 opacity-50 group-hover:opacity-100" />
+                            <span className="text-xs font-semibold">
+                              Run "Convenience" Ads (Ages 18-40)
+                            </span>
                           </Button>
                           <Button
-                            size="sm"
                             variant="outline"
-                            className="h-9 text-xs px-4 sm:w-auto border-neutral-main/40"
+                            className="justify-start gap-3 h-11 border-neutral-main/30 hover:bg-secondary/5 hover:text-secondary transition-all group"
                           >
-                            Export Target List
+                            <RotateCcw className="size-4 opacity-50 group-hover:opacity-100" />
+                            <span className="text-xs font-semibold">
+                              Launch "How-To" Ritual Email Series
+                            </span>
                           </Button>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="pt-8 mt-2 border-t border-neutral-main/10">
-                  <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-secondary" />
-                    Purchasing Breakdown by Customer Group
-                  </h4>
-                  <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-surface text-text-main/60 text-xs uppercase tracking-wider">
-                          <th className="p-3 text-left font-bold w-1/4">Group</th>
-                          <th className="p-3 text-right font-bold w-1/6">Retention</th>
-                          <th className="p-3 text-left font-bold min-w-[200px]">Top Product</th>
-                          <th className="p-3 text-right font-bold w-[100px]">Orders</th>
-                          <th className="p-3 text-right font-bold w-[100px]">Avg Order</th>
-                          <th className="p-3 text-right font-bold w-1/6">Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-main/10">
-                        {customerGroupRevenueData.map((item) => (
-                          <tr key={item.group} className="hover:bg-surface/50 transition-colors">
-                            <td className="p-3 font-bold text-text-main">{item.group}</td>
-                            <td className="p-3 text-right font-semibold text-secondary">
-                              {item.retentionRate}%
-                            </td>
-                            <td className="p-3 text-text-main/70">{item.topProduct}</td>
-                            <td className="p-3 text-right font-medium text-text-main">
-                              {item.orders}
-                            </td>
-                            <td className="p-3 text-right font-medium text-text-main">
-                              ${item.avgOrderValue.toFixed(2)}
-                            </td>
-                            <td className="p-3 text-right font-bold text-primary">
-                              ${item.revenue.toLocaleString()}
-                            </td>
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                  <Users2 className="size-5 text-primary" />
+                  Customer Group Analytics
+                </CardTitle>
+                <p className="text-sm text-text-main/60">
+                  Revenue, retention, and purchasing patterns segmented by customer group.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0 sm:p-6">
+                <div className="flex flex-col gap-8">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
+                      <p className="text-xs uppercase tracking-wider text-text-main/60">
+                        Avg Retention Rate
+                      </p>
+                      <p className="text-3xl font-bold text-primary mt-1">
+                        {averageRetentionRate}%
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-neutral-main/30 bg-surface p-5">
+                      <p className="text-xs uppercase tracking-wider text-text-main/60">
+                        Top Retained Segment
+                      </p>
+                      <p className="text-3xl font-bold text-primary mt-1">
+                        {topRetentionSegment.group}
+                      </p>
+                      <p className="text-xs text-text-main/60 mt-1">
+                        {topRetentionSegment.retentionRate}% returning customers
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      Revenue by Customer Group
+                    </h4>
+                    <div className="h-[240px] w-full">
+                      <ChartContainer
+                        config={{ revenue: { label: "Revenue ($)", color: THEME_COLORS.chart3 } }}
+                        className="aspect-none h-full w-full"
+                      >
+                        <BarChart data={customerGroupRevenueData} margin={{ left: 4, right: 20 }}>
+                          <XAxis dataKey="group" tickLine={false} axisLine={false} />
+                          <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            className="text-[11px] text-text-main/60"
+                            tickFormatter={(value) => `$${value / 1000}k`}
+                          />
+                          <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent hideLabel />}
+                          />
+                          <Bar dataKey="revenue" radius={[6, 6, 0, 0]} barSize={22}>
+                            {customerGroupRevenueData.map((_, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={GROUP_BAR_COLORS[index % GROUP_BAR_COLORS.length]}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ChartContainer>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 mt-2 border-t border-neutral-main/10">
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-secondary" />
+                      Membership Upgrade Propensity
+                    </h4>
+                    <div className="grid lg:grid-cols-2 gap-8 items-center">
+                      <div className="h-[220px] w-full">
+                        <ChartContainer
+                          config={{
+                            probability: {
+                              label: "Conversion Prob (%)",
+                              color: THEME_COLORS.secondary,
+                            },
+                          }}
+                          className="aspect-none h-full w-full"
+                        >
+                          <BarChart
+                            data={propensityData}
+                            layout="vertical"
+                            margin={{ left: 0, right: 30, top: 0, bottom: 0 }}
+                          >
+                            <XAxis type="number" hide />
+                            <YAxis
+                              dataKey="cohort"
+                              type="category"
+                              tickLine={false}
+                              axisLine={false}
+                              className="text-[11px] font-medium text-text-main/70"
+                              width={100}
+                            />
+                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <Bar
+                              dataKey="probability"
+                              fill={THEME_COLORS.secondary}
+                              radius={[0, 4, 4, 0]}
+                              barSize={28}
+                            >
+                              {propensityData.map((_, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={
+                                    index < 2
+                                      ? THEME_COLORS.secondary
+                                      : "var(--color-muted-foreground)"
+                                  }
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ChartContainer>
+                      </div>
+                      <div>
+                        <div className="bg-surface border border-secondary/30 rounded-xl p-6 shadow-sm">
+                          <div className="flex items-start gap-4 mb-5">
+                            <PieChart className="size-6 text-secondary shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-bold text-text-main text-sm leading-relaxed">
+                                34 non-members have purchased 3+ remembrance bundles this year.
+                              </p>
+                              <p className="text-xs text-secondary font-bold mt-1.5 flex items-center gap-1.5 w-fit bg-secondary/10 px-2 py-1 rounded">
+                                <TrendingUp className="size-3" /> 85% conversion probability
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-3 border-t border-neutral-main/10 pt-5">
+                            <Button
+                              size="sm"
+                              className="h-9 text-xs px-4 sm:w-auto bg-secondary hover:bg-secondary/90 text-white shadow-sm"
+                            >
+                              Deploy Target Discount
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-9 text-xs px-4 sm:w-auto border-neutral-main/40"
+                            >
+                              Export Target List
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 mt-2 border-t border-neutral-main/10">
+                    <h4 className="text-sm font-semibold text-text-main/80 mb-4 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-secondary" />
+                      Purchasing Breakdown by Customer Group
+                    </h4>
+                    <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-surface text-text-main/60 text-xs uppercase tracking-wider">
+                            <th className="p-3 text-left font-bold w-1/4">Group</th>
+                            <th className="p-3 text-right font-bold w-1/6">Retention</th>
+                            <th className="p-3 text-left font-bold min-w-[200px]">Top Product</th>
+                            <th className="p-3 text-right font-bold w-[100px]">Orders</th>
+                            <th className="p-3 text-right font-bold w-[100px]">Avg Order</th>
+                            <th className="p-3 text-right font-bold w-1/6">Revenue</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-main/10">
+                          {customerGroupRevenueData.map((item) => (
+                            <tr key={item.group} className="hover:bg-surface/50 transition-colors">
+                              <td className="p-3 font-bold text-text-main">{item.group}</td>
+                              <td className="p-3 text-right font-semibold text-secondary">
+                                {item.retentionRate}%
+                              </td>
+                              <td className="p-3 text-text-main/70">{item.topProduct}</td>
+                              <td className="p-3 text-right font-medium text-text-main">
+                                {item.orders}
+                              </td>
+                              <td className="p-3 text-right font-medium text-text-main">
+                                ${item.avgOrderValue.toFixed(2)}
+                              </td>
+                              <td className="p-3 text-right font-bold text-primary">
+                                ${item.revenue.toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="p-6">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-playfair text-2xl flex items-center gap-2">
-                <Activity className="size-5 text-secondary" />
-                Product Velocity & Demand Tracker
-              </CardTitle>
-              <p className="text-sm text-text-main/60">
-                Granular sales velocity and predicted demand changes for individual SKU components.
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-surface border-b border-neutral-main/20 text-text-main/60 text-xs uppercase tracking-wider">
-                      <th className="p-4 text-left font-bold min-w-[220px]">Product Name</th>
-                      <th className="p-4 text-left font-bold">Category</th>
-                      <th className="p-4 text-right font-bold">Stock</th>
-                      <th className="p-4 text-right font-bold text-secondary">Velocity (Wk)</th>
-                      <th className="p-4 text-right font-bold text-primary">Demand Trend</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-main/10">
-                    {MOCK_INVENTORY.sort((a, b) => b.velocity - a.velocity).map((item) => (
-                      <tr key={item.id} className="hover:bg-surface/50 transition-colors">
-                        <td className="p-4">
-                          <p className="font-bold text-text-main">{item.name}</p>
-                          <p className="text-[10px] text-text-main/50">{item.id}</p>
-                        </td>
-                        <td className="p-4 text-text-main/80 font-medium">{item.category}</td>
-                        <td className="p-4 text-right">
-                          <span
-                            className={`font-bold ${item.stock <= item.threshold ? "text-red-600" : "text-text-main"}`}
-                          >
-                            {item.stock}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right font-bold text-text-main">
-                          {item.velocity} units
-                        </td>
-                        <td className="p-4 text-right font-medium flex items-center justify-end gap-2">
-                          {item.trend === "up" ? (
-                            <span className="flex items-center gap-1.5 text-green-600 font-bold bg-green-50 px-2.5 py-1 rounded border border-green-200">
-                              <TrendingUp className="size-3.5" /> +{item.projectedDemand}%
-                            </span>
-                          ) : item.trend === "down" ? (
-                            <span className="flex items-center gap-1.5 text-red-600 font-bold bg-red-50 px-2.5 py-1 rounded border border-red-200">
-                              <TrendingDown className="size-3.5" /> {item.projectedDemand}%
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1.5 text-text-main/60 font-bold bg-surface px-2.5 py-1 rounded border border-neutral-main/30">
-                              <Minus className="size-3.5" /> Flat
-                            </span>
-                          )}
-                        </td>
+              </CardContent>
+            </Card>
+
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                  <Activity className="size-5 text-secondary" />
+                  Product Velocity & Demand Tracker
+                </CardTitle>
+                <p className="text-sm text-text-main/60">
+                  Granular sales velocity and predicted demand changes for individual SKU
+                  components.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto rounded-xl border border-neutral-main/20">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-surface border-b border-neutral-main/20 text-text-main/60 text-xs uppercase tracking-wider">
+                        <th className="p-4 text-left font-bold min-w-[220px]">Product Name</th>
+                        <th className="p-4 text-left font-bold">Category</th>
+                        <th className="p-4 text-right font-bold">Stock</th>
+                        <th className="p-4 text-right font-bold text-secondary">Velocity (Wk)</th>
+                        <th className="p-4 text-right font-bold text-primary">Demand Trend</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-main/10">
+                      {MOCK_INVENTORY.sort((a, b) => b.velocity - a.velocity).map((item) => (
+                        <tr key={item.id} className="hover:bg-surface/50 transition-colors">
+                          <td className="p-4">
+                            <p className="font-bold text-text-main">{item.name}</p>
+                            <p className="text-[10px] text-text-main/50">{item.id}</p>
+                          </td>
+                          <td className="p-4 text-text-main/80 font-medium">{item.category}</td>
+                          <td className="p-4 text-right">
+                            <span
+                              className={`font-bold ${item.stock <= item.threshold ? "text-red-600" : "text-text-main"}`}
+                            >
+                              {item.stock}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right font-bold text-text-main">
+                            {item.velocity} units
+                          </td>
+                          <td className="p-4 text-right font-medium flex items-center justify-end gap-2">
+                            {item.trend === "up" ? (
+                              <span className="flex items-center gap-1.5 text-green-600 font-bold bg-green-50 px-2.5 py-1 rounded border border-green-200">
+                                <TrendingUp className="size-3.5" /> +{item.projectedDemand}%
+                              </span>
+                            ) : item.trend === "down" ? (
+                              <span className="flex items-center gap-1.5 text-red-600 font-bold bg-red-50 px-2.5 py-1 rounded border border-red-200">
+                                <TrendingDown className="size-3.5" /> {item.projectedDemand}%
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1.5 text-text-main/60 font-bold bg-surface px-2.5 py-1 rounded border border-neutral-main/30">
+                                <Minus className="size-3.5" /> Flat
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   );
