@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 type ProxyStatus = "pending" | "in-progress" | "completed";
 
@@ -137,7 +137,12 @@ const itemVariants = {
 } as const;
 
 export default function ProxyOrdersPage() {
+  const [mounted, setMounted] = useState(false);
   const [proxyQueue, setProxyQueue] = useState<ProxyQueueItem[]>(INITIAL_PROXY_QUEUE);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<ProxyStatus | "all">("all");
 
@@ -183,9 +188,15 @@ export default function ProxyOrdersPage() {
 
   const getStatusBadge = (status: ProxyStatus) => {
     const configs: Record<ProxyStatus, { label: string; class: string }> = {
-      pending: { label: "Pending", class: "bg-amber-50 text-amber-700 border-amber-200" },
-      "in-progress": { label: "In Progress", class: "bg-blue-50 text-blue-700 border-blue-200" },
-      completed: { label: "Completed", class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+      pending: { label: "Pending", class: "bg-amber-100/80 text-amber-900 border-amber-200" },
+      "in-progress": {
+        label: "In Progress",
+        class: "bg-slate-100 text-slate-900 border-slate-200",
+      },
+      completed: {
+        label: "Completed",
+        class: "bg-emerald-100 text-emerald-900 border-emerald-200",
+      },
     };
     const config = configs[status];
     return (
@@ -221,7 +232,7 @@ export default function ProxyOrdersPage() {
             </Button>
             <div className="text-sm font-medium text-text-main/60 bg-surface px-4 py-2 rounded-lg border border-neutral-main/20 flex items-center gap-2">
               <Clock className="size-4 text-secondary" />
-              Sync: {new Date().toLocaleTimeString()}
+              Sync: {mounted ? new Date().toLocaleTimeString() : "--:--:--"}
             </div>
           </div>
         </div>
@@ -349,7 +360,7 @@ export default function ProxyOrdersPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-9 px-4 font-bold border-neutral-main/40 hover:bg-primary hover:text-white hover:border-primary transition-all gap-2"
+                                className="h-9 px-4 font-bold border-primary text-primary hover:bg-primary hover:text-white transition-all gap-2"
                                 onClick={() => updateProxyStatus(request.id, "in-progress")}
                               >
                                 <Play className="size-3.5 fill-current" />
@@ -359,13 +370,13 @@ export default function ProxyOrdersPage() {
                             {request.status === "in-progress" && (
                               <div className="flex justify-end items-center gap-3">
                                 {completingProxyIds[request.id] ? (
-                                  <div className="flex items-center gap-2 text-[10px] font-bold text-blue-600 uppercase tracking-tighter animate-pulse">
+                                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-tighter animate-pulse">
                                     <Clock className="size-3" /> Processing...
                                   </div>
                                 ) : (
                                   <Button
                                     size="sm"
-                                    className="h-9 px-6 font-bold shadow-lg shadow-primary/20 gap-2 bg-blue-600 hover:bg-blue-700"
+                                    className="h-9 px-6 font-bold shadow-lg shadow-primary/20 gap-2 bg-primary hover:bg-primary/90 text-white"
                                     onClick={() => completeProxyRequest(request.id)}
                                   >
                                     <Video className="size-3.5" />
@@ -377,13 +388,12 @@ export default function ProxyOrdersPage() {
                             {request.status === "completed" && (
                               <Button
                                 size="sm"
-                                variant="secondary"
-                                className="h-9 px-4 font-bold gap-2 group transition-all"
+                                className="h-9 px-4 font-bold gap-2 group transition-all bg-secondary hover:bg-secondary/90 text-white shadow-md shadow-secondary/10"
                                 onClick={() => openVideoReview(request)}
                               >
-                                <Video className="size-3.5 text-primary opacity-60" />
+                                <Video className="size-3.5 text-white/80" />
                                 Review Video
-                                <ArrowUpRight className="size-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                <ArrowUpRight className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </Button>
                             )}
                           </td>
@@ -533,7 +543,7 @@ export default function ProxyOrdersPage() {
                     </Button>
                     <Button
                       size="lg"
-                      className="h-12 px-8 font-bold shadow-xl shadow-primary/10 transition-transform active:scale-95"
+                      className="h-12 px-8 font-bold shadow-xl shadow-primary/10 transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-primary"
                       onClick={() => {
                         setVideoReviewOpen(false);
                         setIsVideoPlaying(false);
