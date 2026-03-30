@@ -107,6 +107,10 @@ export default function AdminInventoryPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState<InventoryFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<InventoryFormState>(EMPTY_FORM);
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     setItems(safeReadInventory());
@@ -212,6 +216,76 @@ export default function AdminInventoryPage() {
     setAddOpen(false);
   };
 
+  const openEditDialog = (item: InventoryItem) => {
+    setEditTargetId(item.id);
+    setEditForm({
+      name: item.name,
+      category: item.category,
+      price: String(item.price),
+      stock: String(item.stock),
+      threshold: String(item.threshold),
+    });
+    setEditError(null);
+    setEditOpen(true);
+  };
+
+  const handleEditOpenChange = (nextOpen: boolean) => {
+    setEditOpen(nextOpen);
+    if (!nextOpen) {
+      setEditTargetId(null);
+      setEditError(null);
+      setEditForm(EMPTY_FORM);
+    }
+  };
+
+  const handleUpdateItem = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editTargetId) {
+      setEditError("Unable to update item. Please try again.");
+      return;
+    }
+
+    const name = editForm.name.trim();
+    const category = editForm.category.trim();
+    const price = Number(editForm.price);
+    const stock = Number(editForm.stock);
+    const threshold = Number(editForm.threshold);
+
+    if (
+      !name ||
+      !category ||
+      Number.isNaN(price) ||
+      Number.isNaN(stock) ||
+      Number.isNaN(threshold)
+    ) {
+      setEditError("All fields are required.");
+      return;
+    }
+
+    if (price < 0 || stock < 0 || threshold < 0) {
+      setEditError("Price, stock, and threshold must be non-negative.");
+      return;
+    }
+
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === editTargetId
+          ? {
+              ...item,
+              name,
+              category,
+              price: Number(price.toFixed(2)),
+              stock: Math.floor(stock),
+              threshold: Math.floor(threshold),
+            }
+          : item,
+      ),
+    );
+
+    handleEditOpenChange(false);
+  };
+
   const handleExportCSV = () => {
     if (!items.length) return;
 
@@ -274,14 +348,14 @@ export default function AdminInventoryPage() {
               Manage stock levels for individual ceremonial goods.
             </p>
           </div>
-          <div className="flex gap-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search className="size-5 absolute left-3 top-1/2 -translate-y-1/2 text-text-main/40" />
               <Input
                 placeholder="Search inventory..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2.5 border border-neutral-main rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                className="pl-10 pr-4 py-2.5 border border-neutral-main rounded-lg bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-full sm:w-64"
               />
             </div>
 
@@ -295,7 +369,7 @@ export default function AdminInventoryPage() {
 
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 font-bold">
+                <Button className="gap-2 font-bold w-full sm:w-auto">
                   <Plus className="size-4" /> Add Item
                 </Button>
               </DialogTrigger>
@@ -480,7 +554,12 @@ export default function AdminInventoryPage() {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <Button variant="link" size="sm" className="p-0 text-primary">
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 text-primary"
+                          onClick={() => openEditDialog(item)}
+                        >
                           Update
                         </Button>
                       </td>
@@ -498,6 +577,101 @@ export default function AdminInventoryPage() {
             </div>
           )}
         </Card>
+
+        <Dialog open={editOpen} onOpenChange={handleEditOpenChange}>
+          <DialogContent className="sm:max-w-[460px]">
+            <DialogHeader>
+              <DialogTitle className="font-playfair text-2xl">Update Inventory Item</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateItem} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editItemName">Item Name</Label>
+                <Input
+                  id="editItemName"
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Lotus Incense Bundle"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editItemCategory">Category</Label>
+                <Input
+                  id="editItemCategory"
+                  value={editForm.category}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Incense"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="editItemPrice">Price</Label>
+                  <Input
+                    id="editItemPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.price}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        price: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editItemStock">Stock</Label>
+                  <Input
+                    id="editItemStock"
+                    type="number"
+                    min="0"
+                    value={editForm.stock}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        stock: e.target.value,
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editItemThreshold">Threshold</Label>
+                  <Input
+                    id="editItemThreshold"
+                    type="number"
+                    min="0"
+                    value={editForm.threshold}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        threshold: e.target.value,
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              {editError && <p className="text-xs text-red-600 font-medium">{editError}</p>}
+              <DialogFooter>
+                <Button type="submit" className="w-full">
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

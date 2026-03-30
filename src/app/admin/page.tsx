@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
                 variant="ghost"
                 className="text-primary hover:text-primary hover:bg-primary/5"
               >
-                <Link href="/admin/proxy-orders" className="flex items-center gap-1 font-bold">
+                <Link href="/admin/proxy-queue" className="flex items-center gap-1 font-bold">
                   Manage Queue <ArrowUpRight className="size-4" />
                 </Link>
               </Button>
