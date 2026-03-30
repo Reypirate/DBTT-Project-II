@@ -2,6 +2,7 @@ import "../globals.css";
 import { Providers } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
 import { AIAdvisor } from "@/components/AIAdvisor";
+import { Footer } from "@/components/Footer";
 import React from "react";
 
 export const metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col transition-colors duration-200">
             <Navigation />
             <main className="flex-grow">{children}</main>
+            <Footer />
             <AIAdvisor />
           </div>
         </Providers>

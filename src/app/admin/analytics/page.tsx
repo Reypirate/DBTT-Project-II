@@ -92,6 +92,19 @@ interface AgeDemographicMetric {
   memberships: number;
 }
 
+interface BundleDemand {
+  bundleName: string;
+  currentDemand: number;
+  projectedGrowth: number;
+}
+
+interface GeographicSegment {
+  segment: string;
+  totalCustomers: number;
+  avgOrderValue: number;
+  retentionRate: number;
+}
+
 const THEME_COLORS = {
   primary: "var(--color-primary, #8b1e2d)",
   secondary: "var(--color-secondary, #b8921d)",
@@ -328,6 +341,29 @@ const ageDemographicData: AgeDemographicMetric[] = [
   },
 ];
 
+const bundleDemandData: BundleDemand[] = [
+  { bundleName: "Qingming Essential Kit", currentDemand: 450, projectedGrowth: 45 },
+  { bundleName: "Hungry Ghost Bundle", currentDemand: 380, projectedGrowth: 28 },
+  { bundleName: "New House Bundle", currentDemand: 210, projectedGrowth: 15 },
+  { bundleName: "Ancestral Veneration Kit", currentDemand: 190, projectedGrowth: 10 },
+  { bundleName: "Daily Devotion Set", currentDemand: 150, projectedGrowth: 5 },
+];
+
+const geographicData: GeographicSegment[] = [
+  {
+    segment: "Local (Singapore)",
+    totalCustomers: 1240,
+    avgOrderValue: 85.5,
+    retentionRate: 42,
+  },
+  {
+    segment: "Overseas",
+    totalCustomers: 530,
+    avgOrderValue: 141.2,
+    retentionRate: 65,
+  },
+];
+
 const GROUP_BAR_COLORS = [
   THEME_COLORS.primary,
   THEME_COLORS.secondary,
@@ -450,6 +486,25 @@ export default function DeepAnalyticsPage() {
       data.potentialRevenue,
     ]);
 
+    // Bundle Demand Block
+    const bundleHeaders = ["Bundle Demand Forecasting", "", ""];
+    const bundleCols = ["Bundle Name", "Current Demand (Units)", "Projected Growth (%)"];
+    const bundleRows = bundleDemandData.map((data) => [
+      `"${data.bundleName}"`,
+      data.currentDemand,
+      data.projectedGrowth,
+    ]);
+
+    // Geographic Block
+    const geoHeaders = ["Geographic Analytics", "", "", ""];
+    const geoCols = ["Segment", "Total Customers", "Avg Order Value (S$)", "Retention Rate (%)"];
+    const geoRows = geographicData.map((data) => [
+      `"${data.segment}"`,
+      data.totalCustomers,
+      data.avgOrderValue,
+      data.retentionRate,
+    ]);
+
     const csvContent = [
       invHeaders.join(","),
       invCols.join(","),
@@ -462,6 +517,10 @@ export default function DeepAnalyticsPage() {
       capHeaders.join(","),
       capCols.join(","),
       ...capRows.map((r) => r.join(",")),
+      "",
+      geoHeaders.join(","),
+      geoCols.join(","),
+      ...geoRows.map((r) => r.join(",")),
       "",
       propHeaders.join(","),
       propCols.join(","),
@@ -694,6 +753,19 @@ export default function DeepAnalyticsPage() {
                           </BarChart>
                         </ChartContainer>
                       </div>
+                      <div className="mt-6 space-y-4">
+                        <Alert className="bg-primary/5 border-primary/20">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                          <AlertTitle className="text-sm font-bold text-primary">
+                            Surge Alert
+                          </AlertTitle>
+                          <AlertDescription className="text-xs mt-1.5 text-text-main/80 leading-relaxed">
+                            The <strong>'Qingming Essential Kit'</strong> is seeing a{" "}
+                            <strong>45% week-over-week increase</strong> in pre-orders. Recommend
+                            increasing inventory allocation.
+                          </AlertDescription>
+                        </Alert>
+                      </div>
                     </div>
 
                     <div>
@@ -715,6 +787,27 @@ export default function DeepAnalyticsPage() {
                                 {forecast.focusItem} {forecast.daysUntil} days{" "}
                                 {forecast.confidencePercent}% confidence
                               </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-neutral-main/10">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-text-main/50 mb-3">
+                          Growth Projections
+                        </p>
+                        <div className="space-y-2">
+                          {bundleDemandData.slice(0, 2).map((bundle) => (
+                            <div
+                              key={bundle.bundleName}
+                              className="flex justify-between items-center text-[11px]"
+                            >
+                              <span className="text-text-main/70">{bundle.bundleName}</span>
+                              <Badge
+                                variant="outline"
+                                className="text-green-600 border-green-100 bg-green-50 text-[9px] py-0 h-4"
+                              >
+                                +{bundle.projectedGrowth}%
+                              </Badge>
                             </div>
                           ))}
                         </div>
@@ -1163,6 +1256,59 @@ export default function DeepAnalyticsPage() {
                       </table>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-6">
+                <CardTitle className="font-playfair text-2xl flex items-center gap-2">
+                  <PieChart className="size-5 text-secondary" />
+                  Geographic Analytics
+                </CardTitle>
+                <p className="text-sm text-text-main/60">
+                  Performance comparison between local and overseas customer segments.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0 sm:p-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {geographicData.map((geo) => (
+                    <div
+                      key={geo.segment}
+                      className="rounded-xl border border-neutral-main/30 bg-surface p-5"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <p className="text-xs uppercase tracking-wider text-text-main/60">
+                          {geo.segment}
+                        </p>
+                        <Badge
+                          className={geo.segment === "Overseas" ? "bg-secondary" : "bg-primary"}
+                        >
+                          {geo.totalCustomers} Customers
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] text-text-main/50 uppercase">Avg Order Value</p>
+                          <p className="text-xl font-bold text-text-main">
+                            ${geo.avgOrderValue.toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-text-main/50 uppercase">Retention Rate</p>
+                          <p className="text-xl font-bold text-text-main">{geo.retentionRate}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-8 p-5 rounded-xl bg-secondary/5 border border-secondary/20">
+                  <p className="text-sm text-text-main/80 leading-relaxed italic">
+                    <strong>Insight:</strong> Overseas users account for 30% of total revenue and
+                    demonstrate a 65% higher membership retention rate, despite lower initial bundle
+                    spending compared to Local users. This suggests a high potential for long-term
+                    LTV growth through overseas-targeted memory services.
+                  </p>
                 </div>
               </CardContent>
             </Card>

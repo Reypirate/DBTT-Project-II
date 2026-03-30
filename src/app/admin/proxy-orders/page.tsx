@@ -491,9 +491,8 @@ export default function ProxyOrdersPage() {
                         Verification Meta
                       </h4>
                       <dl className="grid grid-cols-2 gap-y-3 text-sm">
-                        <dt className="text-text-main/60 font-medium">Time Signature</dt>
                         <dd className="text-text-main font-bold text-right">
-                          {new Date(reviewingProxy.videoProof.completedAt).toLocaleString()}
+                          {new Date(reviewingProxy.videoProof.completedAt).toLocaleString("en-SG")}
                         </dd>
                         <dt className="text-text-main/60 font-medium">Integrity Stamp</dt>
                         <dd className="text-emerald-600 font-bold text-right flex items-center justify-end gap-1">

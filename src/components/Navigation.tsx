@@ -6,6 +6,7 @@ import { LogOut, ShoppingCart, User } from "lucide-react";
 import { usePreorder } from "../context/PreorderContext";
 import { CartDrawer } from "./CartDrawer";
 import { ThemeToggle } from "./ThemeToggle";
+import { Button } from "./ui/button";
 
 export const Navigation = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
@@ -105,12 +106,22 @@ export const Navigation = () => {
             </button>
           </div>
         ) : (
-          <Link
-            href="/login"
-            className="text-sm font-bold bg-primary text-white px-5 py-2 rounded-full hover:bg-primary/90 transition-colors shadow-sm"
-          >
-            Sign In
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold text-text-main/70 hover:text-primary"
+              >
+                Log In
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm" className="font-bold shadow-sm">
+                Sign Up
+              </Button>
+            </Link>
+          </div>
         )}
       </nav>
     </header>

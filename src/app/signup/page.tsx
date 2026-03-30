@@ -16,22 +16,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function SignUpPage() {
+  const { register } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const result = login(email, password);
+    const result = register(formData);
     if (result.success) {
       router.push("/profile");
     } else {
-      setError(result.message || "Login failed");
+      setError(result.message || "Registration failed");
     }
   };
 
@@ -40,14 +44,36 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl border-neutral-main">
         <CardHeader className="text-center">
           <CardTitle className="font-playfair text-3xl font-bold text-text-main">
-            Welcome Back
+            Create Account
           </CardTitle>
           <CardDescription>
-            Log in to access your personalized ritual calendar and proxy services.
+            Join our heritage community and manage your ritual reminders.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="John"
+                  required
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  required
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -55,8 +81,8 @@ export default function LoginPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -65,22 +91,22 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
             {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
             <Button type="submit" className="w-full font-bold py-6 text-lg">
-              Log In
+              Sign Up
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 border-t border-neutral-main/30 pt-6">
           <Link
-            href="/signup"
+            href="/login"
             className="text-sm text-primary hover:underline text-center block w-full transition-all"
           >
-            Don't have an account? Sign up
+            Already have an account? Log in
           </Link>
         </CardFooter>
       </Card>

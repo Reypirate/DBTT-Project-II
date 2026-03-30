@@ -37,6 +37,10 @@ interface AuthContextType {
   isLoading: boolean;
   logout: () => void;
   login: (email: string, password?: string) => { success: boolean; message?: string };
+  register: (data: { firstName: string; lastName: string; email: string; password?: string }) => {
+    success: boolean;
+    message?: string;
+  };
   updateMembership: (tier: "Free" | "Member") => void;
   updateCustomerGroup: (group: CustomerGroup) => void;
 }
@@ -97,6 +101,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { success: true };
   };
 
+  const register = (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password?: string;
+  }) => {
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      name: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      role: "customer",
+      tier: "Free",
+      customerGroup: "None",
+    };
+
+    setUser(newUser);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+    return { success: true };
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -127,6 +151,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         logout,
         login,
+        register,
         updateMembership,
         updateCustomerGroup,
       }}

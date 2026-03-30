@@ -306,7 +306,11 @@ export default function AdminDashboardPage() {
                         </p>
                         <p className="text-[11px] text-text-main/60">
                           {order.items.length} item(s) &bull; Pickup:{" "}
-                          {new Date(order.pickupDate).toLocaleDateString()}
+                          {new Date(order.pickupDate).toLocaleDateString("en-SG", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
                       <div className="text-right flex flex-col items-end">
