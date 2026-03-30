@@ -82,7 +82,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
             <Card
               key={product.id}
@@ -130,24 +130,27 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              <CardContent className="p-5 flex flex-col flex-grow">
+              <CardContent className="p-4 sm:p-5 flex flex-col flex-grow">
                 <div className="mb-2">
-                  <h3 className="font-playfair text-lg font-bold text-text-main leading-snug line-clamp-2 min-h-[3rem]">
+                  <h3 className="font-playfair text-sm sm:text-lg font-bold text-text-main leading-snug line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
                     {product.name}
                   </h3>
                 </div>
 
-                <p className="font-bold text-xl text-primary mb-4">${product.price.toFixed(2)}</p>
-                <p className="text-sm text-text-main/70 line-clamp-2 mb-6 flex-grow">
+                <p className="font-bold text-lg sm:text-xl text-primary mb-3 sm:mb-4">
+                  ${product.price.toFixed(2)}
+                </p>
+                <p className="text-xs sm:text-sm text-text-main/70 line-clamp-2 mb-4 sm:mb-6 flex-grow">
                   {product.description}
                 </p>
 
                 <Button
                   variant="outline"
-                  className="w-full gap-2 mt-auto hover:bg-primary hover:text-white transition-all duration-300"
+                  className="w-full gap-1 sm:gap-2 mt-auto hover:bg-primary hover:text-white transition-all duration-300 whitespace-normal text-center h-auto py-2 px-2"
                 >
                   <ShoppingBag className="size-4" />
-                  View Details & Preorder
+                  <span className="sm:hidden">View Details</span>
+                  <span className="hidden sm:inline">View Details & Preorder</span>
                 </Button>
               </CardContent>
             </Card>

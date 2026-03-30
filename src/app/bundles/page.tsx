@@ -73,7 +73,7 @@ export default function BundleListPage() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {filteredBundles.map((bundle) => (
             <Card
               key={bundle.id}
@@ -120,15 +120,19 @@ export default function BundleListPage() {
                 </div>
               </div>
 
-              <CardContent className="p-6 flex flex-col flex-grow">
+              <CardContent className="p-4 sm:p-6 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-playfair text-xl font-bold text-text-main line-clamp-2">
+                  <h3 className="font-playfair text-base sm:text-xl font-bold text-text-main line-clamp-2">
                     {bundle.name}
                   </h3>
-                  <span className="font-bold text-lg text-primary">${bundle.price.toFixed(2)}</span>
+                  <span className="font-bold text-sm sm:text-lg text-primary">
+                    ${bundle.price.toFixed(2)}
+                  </span>
                 </div>
 
-                <p className="text-text-main/70 text-sm mb-6 flex-grow">{bundle.description}</p>
+                <p className="text-text-main/70 text-xs sm:text-sm mb-4 sm:mb-6 flex-grow line-clamp-3 sm:line-clamp-none">
+                  {bundle.description}
+                </p>
 
                 <Button asChild variant="outline" className="w-full gap-2 mt-auto">
                   <Link href={`/bundles/${bundle.id}`}>
