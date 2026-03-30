@@ -10,9 +10,13 @@ export const Footer = () => {
     <footer className="bg-surface border-t border-neutral-main py-12 mt-auto">
       <div className="container mx-auto px-6 lg:px-12 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Section 1 - Sitemap */}
+          {/* Section 1 - Brand & Sitemap */}
           <div className="flex flex-col gap-4">
-            <h4 className="font-playfair text-xl font-bold text-text-main mb-2">Sitemap</h4>
+            <h4 className="font-playfair text-xl font-bold text-text-main mb-2">Hin Long</h4>
+            <p className="text-text-main/70 text-xs leading-relaxed mb-2 max-w-[200px]">
+              Providing authentic ceremonial offerings, proxy services, and joss paper with
+              reverence since 2006.
+            </p>
             <nav className="flex flex-col gap-2">
               <Link
                 href="/"
