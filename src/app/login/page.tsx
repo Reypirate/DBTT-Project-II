@@ -29,7 +29,11 @@ export default function LoginPage() {
 
     const result = login(email, password);
     if (result.success) {
-      router.push("/profile");
+      if (email === "admin@gmail.com") {
+        router.push("/admin");
+      } else {
+        router.push("/profile");
+      }
     } else {
       setError(result.message || "Login failed");
     }

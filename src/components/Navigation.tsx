@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { LogOut, ShoppingCart, User } from "lucide-react";
 import { usePreorder } from "../context/PreorderContext";
@@ -9,6 +10,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 
 export const Navigation = () => {
+  const router = useRouter();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const { preorderItems } = usePreorder();
 
@@ -37,6 +39,9 @@ export const Navigation = () => {
             </Link>
             <Link href="/products" className="hover:text-primary transition-colors font-medium">
               Products
+            </Link>
+            <Link href="/our-story" className="hover:text-primary transition-colors font-medium">
+              Our Story
             </Link>
           </>
         )}
@@ -98,7 +103,10 @@ export const Navigation = () => {
               {user?.name}
             </Link>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                router.push("/login");
+              }}
               className="text-text-main/60 hover:text-primary transition-colors"
               title="Sign Out"
             >
