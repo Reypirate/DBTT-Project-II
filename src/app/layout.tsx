@@ -3,6 +3,7 @@ import { Providers } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
 import { AIAdvisor } from "@/components/AIAdvisor";
 import { RouteFooter } from "@/components/RouteFooter";
+import { Analytics } from "@vercel/analytics/next";
 import React from "react";
 
 export const metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AIAdvisor />
           </div>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
