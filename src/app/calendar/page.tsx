@@ -4,7 +4,8 @@ import { BellRing } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UPCOMING_RITUALS } from "@/data/rituals";
-import RitualCard, { type Ritual } from "./_components/RitualCard";
+import RitualCard from "./_components/RitualCard";
+import type { Ritual } from "./_components/ritual-utils";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useEffect } from "react";
 

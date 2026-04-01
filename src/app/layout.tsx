@@ -1,6 +1,7 @@
 import "../globals.css";
 import { Providers } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { AIAdvisor } from "@/components/AIAdvisor";
 import { RouteFooter } from "@/components/RouteFooter";
 import { Analytics } from "@vercel/analytics/next";
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div className="min-h-screen bg-background-main font-inter text-text-main flex flex-col transition-colors duration-200">
             <Navigation />
+            <SmoothScroll />
             <main className="flex-grow">{children}</main>
             <RouteFooter />
             <AIAdvisor />

@@ -1,220 +1,39 @@
 "use client";
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { Package, AlertTriangle, Plus, Search, Download } from "lucide-react";
+import { AlertTriangle, Plus, Search, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 
-import { MOCK_INVENTORY, type InventoryItem } from "@/data/products";
-
-interface InventoryFormState {
-  name: string;
-  category: string;
-  price: string;
-  stock: string;
-  threshold: string;
-}
-
-interface DemandPrediction {
-  itemId: string;
-  itemName: string;
-  demandLiftPercent: number;
-  horizonDays: number;
-  confidencePercent: number;
-}
-
-interface StockoutFrequencyRecord {
-  itemId: string;
-  stockoutEventsLast90d: number;
-}
-
-const INVENTORY_STORAGE_KEY = "hinlong_owner_inventory";
-
-// Using MOCK_INVENTORY from standard products catalog
-
-const EMPTY_FORM: InventoryFormState = {
-  name: "",
-  category: "",
-  price: "",
-  stock: "",
-  threshold: "",
-};
-
-const INVENTORY_DEMAND_FORECASTS: DemandPrediction[] = [
-  {
-    itemId: "INV-001",
-    itemName: "Premium Gold Joss Paper",
-    demandLiftPercent: 118,
-    horizonDays: 14,
-    confidencePercent: 88,
-  },
-  {
-    itemId: "INV-002",
-    itemName: "Sandalwood Incense (Box)",
-    demandLiftPercent: 46,
-    horizonDays: 21,
-    confidencePercent: 79,
-  },
-  {
-    itemId: "INV-003",
-    itemName: "Red Altar Candles (Pair)",
-    demandLiftPercent: 52,
-    horizonDays: 17,
-    confidencePercent: 81,
-  },
-];
-
-const STOCKOUT_FREQUENCY_HISTORY: StockoutFrequencyRecord[] = [
-  { itemId: "INV-001", stockoutEventsLast90d: 1 },
-  { itemId: "INV-002", stockoutEventsLast90d: 6 },
-  { itemId: "INV-003", stockoutEventsLast90d: 8 },
-  { itemId: "INV-004", stockoutEventsLast90d: 2 },
-  { itemId: "INV-005", stockoutEventsLast90d: 5 },
-];
-
-function safeReadInventory() {
-  try {
-    const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
-    if (!raw) return MOCK_INVENTORY;
-    const parsed = JSON.parse(raw) as InventoryItem[];
-    // Basic validation to ensure it has the new fields
-    if (parsed.length > 0 && typeof parsed[0].velocity !== "number") {
-      localStorage.removeItem(INVENTORY_STORAGE_KEY);
-      return MOCK_INVENTORY;
-    }
-    return Array.isArray(parsed) ? parsed : MOCK_INVENTORY;
-  } catch {
-    localStorage.removeItem(INVENTORY_STORAGE_KEY);
-    return MOCK_INVENTORY;
-  }
-}
+import { useInventoryManager } from "./_hooks/useInventoryManager";
+import { InventoryStats } from "./_components/InventoryStats";
+import { InventoryTable } from "./_components/InventoryTable";
+import { InventoryDialog } from "./_components/InventoryDialogs";
+import { type InventoryItem } from "@/data/products";
 
 export default function AdminInventoryPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [hasHydrated, setHasHydrated] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [form, setForm] = useState<InventoryFormState>(EMPTY_FORM);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editTargetId, setEditTargetId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<InventoryFormState>(EMPTY_FORM);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setItems(safeReadInventory());
-    setHasHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hasHydrated) return;
-    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(items));
-  }, [hasHydrated, items]);
-
-  const filteredItems = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    if (!query) return items;
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query),
-    );
-  }, [items, searchTerm]);
-
-  const lowStockCount = useMemo(
-    () => items.filter((item) => item.stock <= item.threshold).length,
-    [items],
-  );
-
-  const totalInventoryInStock = useMemo(
-    () => items.reduce((sum, item) => sum + item.stock, 0),
-    [items],
-  );
-
-  const topDemandPrediction = useMemo(
-    () =>
-      INVENTORY_DEMAND_FORECASTS.reduce((peak, current) =>
-        current.demandLiftPercent > peak.demandLiftPercent ? current : peak,
-      ),
-    [],
-  );
-
-  const highestStockoutItem = useMemo(() => {
-    const stockoutById = new Map(
-      STOCKOUT_FREQUENCY_HISTORY.map((entry) => [entry.itemId, entry.stockoutEventsLast90d]),
-    );
-    const rankedItems = items
-      .map((item) => ({
-        itemId: item.id,
-        itemName: item.name,
-        stockoutEventsLast90d: stockoutById.get(item.id) ?? 0,
-      }))
-      .sort((a, b) => b.stockoutEventsLast90d - a.stockoutEventsLast90d);
-    return (
-      rankedItems[0] ?? {
-        itemId: "N/A",
-        itemName: "No tracked items",
-        stockoutEventsLast90d: 0,
-      }
-    );
-  }, [items]);
-
-  const handleAddItem = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const name = form.name.trim();
-    const category = form.category.trim();
-    const price = Number(form.price);
-    const stock = Number(form.stock);
-    const threshold = Number(form.threshold);
-
-    if (
-      !name ||
-      !category ||
-      Number.isNaN(price) ||
-      Number.isNaN(stock) ||
-      Number.isNaN(threshold)
-    ) {
-      setFormError("All fields are required.");
-      return;
-    }
-
-    if (price < 0 || stock < 0 || threshold < 0) {
-      setFormError("Price, stock, and threshold must be non-negative.");
-      return;
-    }
-
-    const nextId = `INV-${String(Date.now()).slice(-6)}`;
-    const newItem: InventoryItem = {
-      id: nextId,
-      name,
-      category,
-      price: Number(price.toFixed(2)),
-      stock: Math.floor(stock),
-      threshold: Math.floor(threshold),
-      description: "Manually added proxy item",
-      image: "/images/placeholder-item.png",
-      velocity: 0,
-      projectedDemand: 0,
-      trend: "flat",
-    };
-
-    setItems((prev) => [newItem, ...prev]);
-    setForm(EMPTY_FORM);
-    setFormError(null);
-    setAddOpen(false);
-  };
+  const {
+    filteredItems,
+    searchTerm,
+    setSearchTerm,
+    addOpen,
+    setAddOpen,
+    form,
+    setForm,
+    formError,
+    handleAddItem,
+    editOpen,
+    setEditOpen,
+    setEditTargetId,
+    editForm,
+    setEditForm,
+    editError,
+    handleUpdateItem,
+    handleExportCSV,
+    lowStockCount,
+    items,
+  } = useInventoryManager();
 
   const openEditDialog = (item: InventoryItem) => {
     setEditTargetId(item.id);
@@ -225,112 +44,7 @@ export default function AdminInventoryPage() {
       stock: String(item.stock),
       threshold: String(item.threshold),
     });
-    setEditError(null);
     setEditOpen(true);
-  };
-
-  const handleEditOpenChange = (nextOpen: boolean) => {
-    setEditOpen(nextOpen);
-    if (!nextOpen) {
-      setEditTargetId(null);
-      setEditError(null);
-      setEditForm(EMPTY_FORM);
-    }
-  };
-
-  const handleUpdateItem = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!editTargetId) {
-      setEditError("Unable to update item. Please try again.");
-      return;
-    }
-
-    const name = editForm.name.trim();
-    const category = editForm.category.trim();
-    const price = Number(editForm.price);
-    const stock = Number(editForm.stock);
-    const threshold = Number(editForm.threshold);
-
-    if (
-      !name ||
-      !category ||
-      Number.isNaN(price) ||
-      Number.isNaN(stock) ||
-      Number.isNaN(threshold)
-    ) {
-      setEditError("All fields are required.");
-      return;
-    }
-
-    if (price < 0 || stock < 0 || threshold < 0) {
-      setEditError("Price, stock, and threshold must be non-negative.");
-      return;
-    }
-
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === editTargetId
-          ? {
-              ...item,
-              name,
-              category,
-              price: Number(price.toFixed(2)),
-              stock: Math.floor(stock),
-              threshold: Math.floor(threshold),
-            }
-          : item,
-      ),
-    );
-
-    handleEditOpenChange(false);
-  };
-
-  const handleExportCSV = () => {
-    if (!items.length) return;
-
-    // Headers
-    const headers = [
-      "ID",
-      "Name",
-      "Category",
-      "Price",
-      "Stock",
-      "Threshold",
-      "Velocity",
-      "Projected Demand",
-      "Trend",
-    ];
-
-    // Rows
-    const csvRows = [
-      headers.join(","),
-      ...items.map((item) => {
-        return [
-          item.id,
-          `"${item.name.replace(/"/g, '""')}"`,
-          `"${item.category.replace(/"/g, '""')}"`,
-          item.price,
-          item.stock,
-          item.threshold,
-          item.velocity,
-          item.projectedDemand,
-          item.trend,
-        ].join(",");
-      }),
-    ];
-
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `hinlong_inventory_${new Date().toISOString().split("T")[0]}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -362,316 +76,50 @@ export default function AdminInventoryPage() {
             <Button
               variant="outline"
               onClick={handleExportCSV}
-              className="gap-2 font-bold whitespace-nowrap hidden sm:flex border-neutral-main"
+              className="gap-2 font-bold whitespace-nowrap hidden sm:flex border-neutral-main bg-surface"
             >
               <Download className="size-4" /> Export CSV
             </Button>
 
-            <Dialog open={addOpen} onOpenChange={setAddOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 font-bold w-full sm:w-auto">
-                  <Plus className="size-4" /> Add Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[460px]">
-                <DialogHeader>
-                  <DialogTitle className="font-playfair text-2xl">Add Inventory Item</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddItem} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="itemName">Item Name</Label>
-                    <Input
-                      id="itemName"
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Lotus Incense Bundle"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="itemCategory">Category</Label>
-                    <Input
-                      id="itemCategory"
-                      value={form.category}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          category: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Incense"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="itemPrice">Price</Label>
-                      <Input
-                        id="itemPrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.price}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            price: e.target.value,
-                          }))
-                        }
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="itemStock">Stock</Label>
-                      <Input
-                        id="itemStock"
-                        type="number"
-                        min="0"
-                        value={form.stock}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            stock: e.target.value,
-                          }))
-                        }
-                        placeholder="0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="itemThreshold">Threshold</Label>
-                      <Input
-                        id="itemThreshold"
-                        type="number"
-                        min="0"
-                        value={form.threshold}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            threshold: e.target.value,
-                          }))
-                        }
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                  {formError && <p className="text-xs text-red-600 font-medium">{formError}</p>}
-                  <DialogFooter>
-                    <Button type="submit" className="w-full">
-                      Create Item
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <InventoryDialog
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              title="Add Inventory Item"
+              submitLabel="Create Item"
+              form={form}
+              setForm={setForm}
+              onSubmit={handleAddItem}
+              error={formError}
+            />
+
+            <Button
+              className="gap-2 font-bold w-full sm:w-auto"
+              onClick={() => {
+                setForm({ name: "", category: "", price: "", stock: "", threshold: "" });
+                setAddOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> Add Item
+            </Button>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Card className="border border-neutral-main p-5">
-            <p className="text-xs uppercase tracking-wider text-text-main/60">
-              Total Inventory in Stock
-            </p>
-            <p className="text-3xl font-playfair font-bold text-primary mt-2">
-              {totalInventoryInStock.toLocaleString()}
-            </p>
-            <p className="text-xs text-text-main/60 mt-2">
-              Aggregate units across all active SKUs.
-            </p>
-          </Card>
+        <InventoryStats items={items} />
 
-          <Card className="border border-neutral-main p-5">
-            <p className="text-xs uppercase tracking-wider text-text-main/60">
-              Inventory Demand Prediction
-            </p>
-            <p className="text-lg font-bold text-secondary mt-2">
-              High demand expected for {topDemandPrediction.itemName}
-            </p>
-            <p className="text-xs text-text-main/60 mt-2">
-              +{topDemandPrediction.demandLiftPercent}% forecast in{" "}
-              {topDemandPrediction.horizonDays} days {topDemandPrediction.confidencePercent}%
-              confidence.
-            </p>
-          </Card>
-
-          <Card className="border border-neutral-main p-5">
-            <p className="text-xs uppercase tracking-wider text-text-main/60">Stockout Frequency</p>
-            <p className="text-lg font-bold text-primary mt-2">{highestStockoutItem.itemName}</p>
-            <p className="text-xs text-text-main/60 mt-2">
-              {highestStockoutItem.stockoutEventsLast90d} stockout events in the last 90 days.
-            </p>
-          </Card>
-        </div>
-
-        <Card className="border border-neutral-main rounded-2xl shadow-sm overflow-hidden text-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface border-b border-neutral-main text-text-main/60 uppercase tracking-wider text-xs">
-                  <th className="p-4 font-bold">Item Name</th>
-                  <th className="p-4 font-bold">Category</th>
-                  <th className="p-4 font-bold">Price</th>
-                  <th className="p-4 font-bold">Stock Level</th>
-                  <th className="p-4 font-bold">Status</th>
-                  <th className="p-4 font-bold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-main">
-                {filteredItems.map((item) => {
-                  const isLow = item.stock <= item.threshold;
-                  return (
-                    <tr key={item.id} className="hover:bg-surface/50 transition-colors">
-                      <td className="p-4">
-                        <div className="font-bold text-text-main">{item.name}</div>
-                        <div className="text-xs text-text-main/50">{item.id}</div>
-                      </td>
-                      <td className="p-4 text-text-main/80">{item.category}</td>
-                      <td className="p-4 font-medium">${item.price.toFixed(2)}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`font-bold ${isLow ? "text-red-600" : "text-text-main"}`}
-                          >
-                            {item.stock}
-                          </span>
-                          <span className="text-text-main/50 text-xs">/ min {item.threshold}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        {isLow ? (
-                          <Badge
-                            variant="destructive"
-                            className="flex items-center gap-1 font-bold bg-red-100 text-red-600 border border-red-200"
-                          >
-                            <AlertTriangle className="size-3" /> Low Stock
-                          </Badge>
-                        ) : (
-                          <Badge className="font-bold bg-green-100 text-green-600 border border-green-200">
-                            Healthy
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="p-0 text-primary"
-                          onClick={() => openEditDialog(item)}
-                        >
-                          Update
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredItems.length === 0 && (
-            <div className="p-12 text-center text-text-main/50 flex flex-col items-center">
-              <Package className="size-12 mb-4 opacity-50" />
-              <p>No inventory items match your search.</p>
-            </div>
-          )}
+        <Card className="border border-neutral-main rounded-2xl shadow-sm overflow-hidden">
+          <InventoryTable items={filteredItems} onUpdate={openEditDialog} />
         </Card>
 
-        <Dialog open={editOpen} onOpenChange={handleEditOpenChange}>
-          <DialogContent className="sm:max-w-[460px]">
-            <DialogHeader>
-              <DialogTitle className="font-playfair text-2xl">Update Inventory Item</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleUpdateItem} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="editItemName">Item Name</Label>
-                <Input
-                  id="editItemName"
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Lotus Incense Bundle"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editItemCategory">Category</Label>
-                <Input
-                  id="editItemCategory"
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Incense"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="editItemPrice">Price</Label>
-                  <Input
-                    id="editItemPrice"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={editForm.price}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        price: e.target.value,
-                      }))
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editItemStock">Stock</Label>
-                  <Input
-                    id="editItemStock"
-                    type="number"
-                    min="0"
-                    value={editForm.stock}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        stock: e.target.value,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editItemThreshold">Threshold</Label>
-                  <Input
-                    id="editItemThreshold"
-                    type="number"
-                    min="0"
-                    value={editForm.threshold}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        threshold: e.target.value,
-                      }))
-                    }
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-              {editError && <p className="text-xs text-red-600 font-medium">{editError}</p>}
-              <DialogFooter>
-                <Button type="submit" className="w-full">
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <InventoryDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          title="Update Inventory Item"
+          submitLabel="Save Changes"
+          form={editForm}
+          setForm={setEditForm}
+          onSubmit={handleUpdateItem}
+          error={editError}
+        />
       </div>
     </div>
   );

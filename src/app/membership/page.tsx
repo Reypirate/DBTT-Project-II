@@ -1,177 +1,99 @@
 "use client";
 
+import { Sparkles, Crown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, X, Crown, Sparkles, CalendarHeart, Bell, Flame, Video } from "lucide-react";
-
-const TIERS = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Explore our heritage calendar and browse products.",
-    features: [
-      { text: "Ritual calendar access", included: true },
-      { text: "View upcoming dates & significance", included: true },
-      { text: "Browse products & bundles", included: true },
-      { text: "Basic AI Advisor", included: true },
-      { text: "Date reminders & notifications", included: false },
-      { text: "AI-personalized bundle recommendations", included: false },
-      { text: "Proxy burning service", included: false },
-      { text: "Video confirmation", included: false },
-      { text: "Saved preferences & history", included: false },
-    ],
-    cta: "Current Plan",
-    highlighted: false,
-  },
-  {
-    name: "Member",
-    price: "$12.90",
-    period: "/ month",
-    description: "Full heritage experience with proxy services and personalized guidance.",
-    features: [
-      { text: "Everything in Free", included: true },
-      { text: "Date reminders & actual-day notifications", included: true },
-      { text: "AI-personalized bundle recommendations", included: true },
-      { text: "Proxy burning service", included: true },
-      { text: "Video confirmation after ritual", included: true },
-      { text: "Saved preferences & dashboard history", included: true },
-      { text: "Premium AI Heritage Advisor", included: true },
-      { text: "Priority customer support", included: true },
-    ],
-    cta: "Join Membership",
-    highlighted: true,
-  },
-];
-
-const FEATURE_ICONS: Record<string, React.ReactNode> = {
-  "Proxy burning service": <Flame className="size-4" />,
-  "Video confirmation after ritual": <Video className="size-4" />,
-  "Date reminders & actual-day notifications": <Bell className="size-4" />,
-  "AI-personalized bundle recommendations": <Sparkles className="size-4" />,
-  "Premium AI Heritage Advisor": <Crown className="size-4" />,
-};
+import { TIERS } from "./_lib/membership-data";
+import { MembershipTierCard } from "./_components/MembershipTierCard";
 
 export default function MembershipPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const isMember = user?.tier === "Member";
 
+  const handleSelect = (tierName: string) => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    } else if (tierName === "Member") {
+      router.push("/checkout?mode=membership");
+    }
+  };
+
   return (
-    <div className="bg-background-main min-h-screen py-16">
-      <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-primary/20">
-            <CalendarHeart className="size-3 mr-1" />
-            Heritage Plans
-          </Badge>
-          <h1 className="font-playfair text-5xl font-bold text-text-main mb-4">Choose Your Plan</h1>
-          <p className="text-text-main/70 max-w-xl mx-auto text-lg">
-            Select the plan that best supports your family's heritage rituals. Upgrade anytime for
-            full access.
+    <div className="min-h-screen bg-background-main pb-32 selection:bg-primary selection:text-white overflow-hidden">
+      {/* Background Decor/Grain */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-50 mix-blend-overlay bg-[url('/images/grain.png')] bg-repeat" />
+
+      {/* Hero Section */}
+      <section className="relative px-6 pt-32 pb-20 text-center container mx-auto max-w-4xl">
+        {/* Glowing Aura Decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-primary/20 text-primary text-sm font-bold shadow-md shadow-primary/5 animate-fade-in">
+            <Sparkles className="size-4" />
+            <span>Premium Heritage Access</span>
+          </div>
+
+          <h1 className="font-playfair text-5xl md:text-7xl font-bold text-text-main leading-tight tracking-tight">
+            Connect with Your <br />
+            <span className="text-primary italic">Heritage</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-text-main/70 max-w-2xl mx-auto leading-relaxed font-medium">
+            Join our community to preserve traditions and ensure your reverence rituals are
+            performed with meticulous care and modern convenience.
           </p>
         </div>
+      </section>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      {/* Pricing Grid */}
+      <section className="px-6 container mx-auto max-w-6xl relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
           {TIERS.map((tier) => {
             const isCurrent =
               (tier.name === "Free" && !isMember) || (tier.name === "Member" && isMember);
 
             return (
-              <Card
+              <MembershipTierCard
                 key={tier.name}
-                className={`relative overflow-hidden transition-all duration-300 ${
-                  tier.highlighted
-                    ? "border-2 border-primary shadow-xl shadow-primary/10 scale-[1.02]"
-                    : "border-neutral-main"
-                }`}
-              >
-                {tier.highlighted && (
-                  <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs font-bold uppercase tracking-widest py-1.5">
-                    Most Popular
-                  </div>
-                )}
-
-                <CardHeader className={`${tier.highlighted ? "pt-10" : "pt-6"}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    {tier.highlighted && <Crown className="size-5 text-primary" />}
-                    <CardTitle className="font-playfair text-2xl">{tier.name}</CardTitle>
-                    {isCurrent && (
-                      <Badge variant="outline" className="text-[10px] uppercase">
-                        Current
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription>{tier.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-text-main">{tier.price}</span>
-                    <span className="text-text-main/60 ml-1">{tier.period}</span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  <div className="space-y-3">
-                    {tier.features.map((feature, i) => (
-                      <div
-                        key={i}
-                        className={`flex items-start gap-3 text-sm ${
-                          feature.included ? "text-text-main" : "text-text-main/30"
-                        }`}
-                      >
-                        <div
-                          className={`mt-0.5 p-0.5 rounded-full ${
-                            feature.included
-                              ? "text-primary bg-primary/10"
-                              : "text-text-main/20 bg-neutral-main/20"
-                          }`}
-                        >
-                          {feature.included ? (
-                            FEATURE_ICONS[feature.text] || <Check className="size-3.5" />
-                          ) : (
-                            <X className="size-3.5" />
-                          )}
-                        </div>
-                        <span>{feature.text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    className={`w-full font-bold py-6 text-base ${
-                      tier.highlighted && !isCurrent
-                        ? "bg-primary hover:bg-primary/90 shadow-md"
-                        : ""
-                    }`}
-                    variant={isCurrent ? "outline" : tier.highlighted ? "default" : "secondary"}
-                    disabled={isCurrent}
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        router.push("/login");
-                      } else if (tier.name === "Member") {
-                        router.push("/checkout?mode=membership");
-                      }
-                    }}
-                  >
-                    {isCurrent ? "✓ Current Plan" : tier.cta}
-                  </Button>
-                </CardContent>
-              </Card>
+                tier={tier}
+                isCurrent={isCurrent}
+                onSelect={() => handleSelect(tier.name)}
+              />
             );
           })}
         </div>
 
-        {/* FAQ / Trust */}
-        <div className="mt-20 text-center">
-          <p className="text-sm text-text-main/40">
-            Cancel anytime · No hidden fees · Secure payment
+        {/* Bottom Banner */}
+        <div className="mt-20 p-10 rounded-3xl bg-surface border border-primary/20 shadow-xl text-center max-w-4xl mx-auto relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Crown className="size-32 text-primary rotate-12" />
+          </div>
+
+          <h4 className="text-2xl font-bold text-text-main mb-4 relative z-10">
+            For Large Ceremonies & Businesses
+          </h4>
+          <p className="text-text-main/70 max-w-xl mx-auto mb-8 relative z-10">
+            Dedicated concierge support for corporate offerings, large-scale temple donations, and
+            customized heritage programs. Contact our concierge for a bespoke arrangement.
           </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 font-bold">
+            <a
+              href="mailto:concierge@hinlong.sg"
+              className="underline decoration-primary/40 hover:decoration-primary transition-all"
+            >
+              concierge@hinlong.sg
+            </a>
+            <span className="hidden sm:inline text-neutral-main/30">|</span>
+            <span className="text-text-main/80">+65 6793 9005</span>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Decorative Ornaments */}
+      <div className="absolute top-1/4 -left-20 size-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 size-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
     </div>
   );
 }
