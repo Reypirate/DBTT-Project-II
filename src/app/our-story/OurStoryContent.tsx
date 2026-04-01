@@ -158,17 +158,24 @@ export default function OurStoryPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=638+Jurong+West+Street+61+%2301-05+Pioneer+Mall+Singapore+640638"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-4 group/loc cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 group-hover/loc:bg-primary/20 transition-colors">
                   <MapPin className="text-primary w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-text-main">Location</h4>
+                  <h4 className="font-bold text-text-main group-hover/loc:text-primary transition-colors">
+                    Location
+                  </h4>
                   <p className="text-text-main/70 text-sm">
                     638 Jurong West Street 61 #01-05 Pioneer Mall, Singapore 640638
                   </p>
                 </div>
-              </div>
+              </a>
 
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
@@ -194,12 +201,16 @@ export default function OurStoryPage() {
             </div>
           </div>
 
-          <div className="bg-neutral-main/20 rounded-2xl aspect-video lg:aspect-[4/3] flex flex-col items-center justify-center border border-neutral-main group overflow-hidden relative shadow-inner">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?auto=format&fit=crop&q=80')] bg-cover opacity-10 group-hover:scale-105 transition-transform duration-1000 grayscale" />
-            <MapPin className="w-12 h-12 text-primary mb-3 animate-bounce" />
-            <p className="text-text-main font-bold relative z-10 text-center px-6 text-sm">
-              638 Jurong West Street 61 #01-05 Pioneer Mall
-            </p>
+          <div className="rounded-2xl aspect-video lg:aspect-[4/3] border border-neutral-main overflow-hidden relative shadow-md">
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=Hin+Long+Joss+Sticks+%26+Papers+638+Jurong+West+Street+61+%2301-05+Pioneer+Mall+Singapore+640638`}
+            />
           </div>
         </div>
       </section>

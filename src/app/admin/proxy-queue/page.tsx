@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
 type ProxyStatus = "pending" | "in-progress" | "completed";
 
@@ -29,6 +29,7 @@ interface ProxyVideoProof {
   completedAt: string;
   durationSeconds: number;
   proofNote: string;
+  url?: string;
 }
 
 interface ProxyQueueItem {
@@ -49,7 +50,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
     date: "2026-04-05",
     bundle: "Qingming Essential Kit",
     status: "pending",
-    videoProof: { id: "VID-001", completedAt: "", durationSeconds: 0, proofNote: "" },
+    videoProof: { id: "VID-001", completedAt: "", durationSeconds: 0, proofNote: "", url: "" },
   },
   {
     id: "PXY-002",
@@ -58,7 +59,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
     date: "2026-04-12",
     bundle: "Everyday Deity Offering Set",
     status: "in-progress",
-    videoProof: { id: "VID-002", completedAt: "", durationSeconds: 0, proofNote: "" },
+    videoProof: { id: "VID-002", completedAt: "", durationSeconds: 0, proofNote: "", url: "" },
   },
   {
     id: "PXY-003",
@@ -72,6 +73,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
       completedAt: "2026-03-28T18:05:00.000Z",
       durationSeconds: 112,
       proofNote: "Full burn sequence and completion bow captured end-to-end.",
+      url: "/images/proxy.mp4",
     },
   },
   {
@@ -81,7 +83,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
     date: "2026-04-15",
     bundle: "Qingming Essential Kit",
     status: "pending",
-    videoProof: { id: "VID-004", completedAt: "", durationSeconds: 0, proofNote: "" },
+    videoProof: { id: "VID-004", completedAt: "", durationSeconds: 0, proofNote: "", url: "" },
   },
   {
     id: "PXY-005",
@@ -90,7 +92,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
     date: "2026-04-20",
     bundle: "Daily Devotion Set",
     status: "in-progress",
-    videoProof: { id: "VID-005", completedAt: "", durationSeconds: 0, proofNote: "" },
+    videoProof: { id: "VID-005", completedAt: "", durationSeconds: 0, proofNote: "", url: "" },
   },
   {
     id: "PXY-006",
@@ -104,6 +106,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
       completedAt: "2026-03-25T09:30:00.000Z",
       durationSeconds: 95,
       proofNote: "Traditional chanting and incense placement verified.",
+      url: "/images/proxy.mp4",
     },
   },
   {
@@ -113,7 +116,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
     date: "2026-04-02",
     bundle: "Qingming Essential Kit",
     status: "pending",
-    videoProof: { id: "VID-007", completedAt: "", durationSeconds: 0, proofNote: "" },
+    videoProof: { id: "VID-007", completedAt: "", durationSeconds: 0, proofNote: "", url: "" },
   },
   {
     id: "PXY-008",
@@ -127,6 +130,7 @@ const INITIAL_PROXY_QUEUE: ProxyQueueItem[] = [
       completedAt: "2026-03-22T16:45:00.000Z",
       durationSeconds: 120,
       proofNote: "Premium sandalwood burn sequence recorded in full.",
+      url: "/images/proxy.mp4",
     },
   },
 ];
@@ -150,6 +154,16 @@ export default function ProxyOrdersPage() {
   const [videoReviewOpen, setVideoReviewOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [reviewingProxy, setReviewingProxy] = useState<ProxyQueueItem | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (isVideoPlaying) {
+      videoRef.current.play().catch(() => setIsVideoPlaying(false));
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isVideoPlaying]);
 
   const filteredOrders = useMemo(() => {
     return proxyQueue.filter((item) => {
@@ -171,7 +185,23 @@ export default function ProxyOrdersPage() {
   const completeProxyRequest = (id: string) => {
     setCompletingProxyIds((prev) => ({ ...prev, [id]: true }));
     window.setTimeout(() => {
-      updateProxyStatus(id, "completed");
+      setProxyQueue((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "completed",
+                videoProof: {
+                  ...item.videoProof,
+                  completedAt: new Date().toISOString(),
+                  durationSeconds: 45,
+                  proofNote: "Fulfillment ceremony completed and verified by operator.",
+                  url: "/images/proxy.mp4",
+                },
+              }
+            : item,
+        ),
+      );
       setCompletingProxyIds((prev) => {
         const next = { ...prev };
         delete next[id];
@@ -417,13 +447,23 @@ export default function ProxyOrdersPage() {
             </DialogHeader>
             {reviewingProxy && (
               <div className="p-0">
-                <div className="aspect-video w-full bg-slate-950 flex flex-col justify-center items-center text-white relative group">
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-[10px] font-bold uppercase tracking-widest">
+                <div className="aspect-video w-full bg-slate-955 overflow-hidden flex flex-col justify-center items-center text-white relative group">
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    src={reviewingProxy.videoProof.url}
+                    onPlay={() => setIsVideoPlaying(true)}
+                    onPause={() => setIsVideoPlaying(false)}
+                    loop
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors pointer-events-none" />
+
+                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-white/20 text-[10px] font-bold uppercase tracking-widest pointer-events-none">
                     <div className="size-1.5 bg-red-600 rounded-full animate-pulse" />
                     Secure Replay: {reviewingProxy.videoProof.id}
                   </div>
 
-                  <div className="flex flex-col items-center gap-4 opacity-40 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     {!isVideoPlaying ? (
                       <button
                         onClick={() => setIsVideoPlaying(true)}
