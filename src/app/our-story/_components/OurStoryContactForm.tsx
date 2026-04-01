@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
+import logger from "@/lib/pino";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +29,7 @@ export function OurStoryContactForm({ formRef }: OurStoryContactFormProps) {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
-    console.log("Form Submitted:", formData);
+    logger.info({ formData }, "Form Submitted");
 
     setTimeout(() => {
       setIsSubmitted(false);

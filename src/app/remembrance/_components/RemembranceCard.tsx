@@ -14,6 +14,7 @@ import Link from "next/link";
 import { BUNDLES } from "@/data/bundles";
 
 import { useAuth } from "@/context/AuthContext";
+import logger from "@/lib/pino";
 
 async function safeReadJson(res: Response) {
   const raw = await res.text();
@@ -59,7 +60,7 @@ export function RemembranceCard({ item }: { item: any }) {
         const result = await safeReadJson(res);
 
         if (!res.ok) {
-          console.error("RemembranceCard AI request failed:", result, "status:", res.status);
+          logger.error({ result, status: res.status }, "RemembranceCard AI request failed");
           setTip("AI tip is temporarily unavailable. Please retry shortly.");
           return;
         }
@@ -67,7 +68,10 @@ export function RemembranceCard({ item }: { item: any }) {
         // Handle TanStack AI response structures
         const aiData = result.output || result.content || result;
         if (aiData?.fallback) {
-          console.error("RemembranceCard live model unavailable. Using fallback response.", aiData);
+          logger.warn(
+            { aiData },
+            "RemembranceCard live model unavailable. Using fallback response.",
+          );
         }
         setIsFallbackAdvice(Boolean(aiData.fallback));
 
@@ -83,7 +87,7 @@ export function RemembranceCard({ item }: { item: any }) {
           setRecommendedBundle(null);
         }
       } catch (err) {
-        console.error("AI Tip Error:", err);
+        logger.error(err, "AI Tip Error");
       } finally {
         setLoading(false);
       }

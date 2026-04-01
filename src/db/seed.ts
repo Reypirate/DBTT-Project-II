@@ -2,23 +2,24 @@ import { db } from "./index";
 import { products } from "./schema";
 import { PRODUCTS } from "../data/products";
 import * as dotenv from "dotenv";
+import logger from "../lib/pino";
 
 // Load environment variables from .env or .env.local
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 async function main() {
-  console.log("⏳ Starting seed process...");
+  logger.info("⏳ Starting seed process...");
 
   if (!process.env.DATABASE_URL) {
-    console.warn(
+    logger.warn(
       "⚠️ DATABASE_URL is not set. Cannot run actual seeding. Please configure .env properly.",
     );
     process.exit(1);
   }
 
   // Insert actual products from our local data file
-  console.log(`Starting to seed ${PRODUCTS.length} products...`);
+  logger.info(`Starting to seed ${PRODUCTS.length} products...`);
 
   for (const product of PRODUCTS) {
     await db
@@ -43,12 +44,11 @@ async function main() {
       });
   }
 
-  console.log("✅ Seeding completed successfully");
+  logger.info("✅ Seeding completed successfully");
   process.exit(0);
 }
 
 main().catch((e) => {
-  console.error("❌ Seeding failed");
-  console.error(e);
+  logger.error(e, "❌ Seeding failed");
   process.exit(1);
 });

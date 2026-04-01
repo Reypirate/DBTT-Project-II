@@ -18,6 +18,7 @@ import { BUNDLES } from "@/data/bundles";
 import { PRODUCTS } from "@/data/products";
 
 import { useAuth } from "@/context/AuthContext";
+import logger from "@/lib/pino";
 
 const INITIAL_SUGGESTIONS = [
   "Grandparents' death anniversary offerings",
@@ -96,7 +97,7 @@ export function AIAdvisor() {
 
       if (!res.ok) {
         const message = getApiErrorMessage(result, res.status);
-        console.error("AI Advisor request failed:", result, "status:", res.status);
+        logger.error({ result, status: res.status }, "AI Advisor request failed");
         setMessages((prev) => [
           ...prev,
           {
@@ -110,7 +111,7 @@ export function AIAdvisor() {
       // Handle TanStack AI response structures
       const aiData = result.output || result.content || result;
       if (aiData?.fallback) {
-        console.error("AI Advisor live model unavailable. Using fallback response.", aiData);
+        logger.warn({ aiData }, "AI Advisor live model unavailable. Using fallback response.");
       }
 
       setMessages((prev) => [
@@ -126,7 +127,7 @@ export function AIAdvisor() {
         },
       ]);
     } catch (error) {
-      console.error("AI Advisor unexpected error:", error);
+      logger.error(error, "AI Advisor unexpected error");
       setMessages((prev) => [
         ...prev,
         {

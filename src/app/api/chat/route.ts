@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as Gemini from "@tanstack/ai-gemini";
 import { chat } from "@tanstack/ai";
 import { z } from "zod";
+import logger from "@/lib/pino";
 
 const DEFAULT_MODEL_NAME = "gemini-3.1-flash-lite-preview";
 const ENABLE_FALLBACK = process.env.AI_ADVISOR_FALLBACK !== "false";
@@ -185,7 +186,7 @@ export async function POST(req: Request) {
 
     if (!apiKey) {
       if (ENABLE_FALLBACK) {
-        console.error("AI Advisor API: missing API key, returning fallback response.");
+        logger.error("AI Advisor API: missing API key, returning fallback response.");
         return NextResponse.json(
           buildFallbackAdvice(normalizedPrompt, requestTier, "missing API key"),
         );
@@ -231,9 +232,9 @@ export async function POST(req: Request) {
     const normalized = normalizeChatError(error);
 
     if (ENABLE_FALLBACK && normalized.status === 429) {
-      console.error(
+      logger.error(
+        { error, normalized },
         "AI Advisor API: live model rate-limited, returning fallback response.",
-        normalized,
       );
       return NextResponse.json(
         buildFallbackAdvice(
@@ -251,7 +252,7 @@ export async function POST(req: Request) {
       headers.set("Retry-After", String(normalized.retryAfterSeconds));
     }
 
-    console.error("AI Advisor API: live model failed without fallback.", normalized);
+    logger.error({ error, normalized }, "AI Advisor API: live model failed without fallback.");
 
     return NextResponse.json(
       {
