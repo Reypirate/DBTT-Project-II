@@ -1,6 +1,7 @@
 import { Award, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Typewriter from "@/components/ui/typewriter-wrapper";
 
 export default function Hero() {
   return (
@@ -15,11 +16,22 @@ export default function Hero() {
           <span>Since 1978 &bull; Hin Long Joss Sticks & Papers</span>
         </div>
 
-        <h1 className="font-playfair text-5xl lg:text-7xl font-bold text-text-main mb-6 leading-tight max-w-4xl">
+        <h1 className="font-playfair text-5xl lg:text-7xl font-bold text-text-main mb-6 leading-tight max-w-4xl tracking-tight">
           Honoring traditions, <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-            simplified for today.
-          </span>
+          <Typewriter
+            options={{
+              strings: [
+                "simplified for today.",
+                "made easier for you.",
+                "never miss a date again.",
+              ],
+              autoStart: true,
+              loop: true,
+              wrapperClassName:
+                "text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary inline-block",
+              cursorClassName: "text-primary",
+            }}
+          />
         </h1>
 
         <p className="text-lg lg:text-xl text-text-main/70 max-w-2xl mb-10 font-inter">
