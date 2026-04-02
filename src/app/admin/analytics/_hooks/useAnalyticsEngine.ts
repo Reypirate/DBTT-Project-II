@@ -10,7 +10,7 @@ import {
   hashSeed,
   runLinearRegressionDemandForecast,
   scoreCustomerChurn,
-} from "@/lib/analytics-engine";
+} from "@/app/admin/analytics/_lib/analytics-engine";
 
 export function useAnalyticsEngine() {
   return useMemo(() => {
